@@ -1,1260 +1,1709 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Adopt A Space</title>
-    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Inter font --><link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Apply Inter font */
-        body, html {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0fdf4; /* lime-50 */
-            -webkit-tap-highlight-color: transparent; /* Disable tap highlight */
-        }
-        /* Page transition helper */
-        .page {
-            display: none; /* Hide all pages by default */
-            min-height: 100vh;
-        }
-        .page.active-page {
-            display: block; /* Show only the active page */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Adopt A Space: ULTIMATE PRO MAX</title>
+<style>
+/* ==========================================================================
+   1. CORE ARCHITECTURE & CSS VARIABLES
+   ========================================================================== 
+*/
 
-        /* Active state for bottom nav */
-        .nav-button.active {
-            color: #65a30d; /* lime-600 */
-        }
-        .nav-button.active .nav-icon {
-            transform: scale(1.1);
-        }
+:root {
+    /* --- Brand Palette: Emerald & Slate --- 
+       Defined using HSL for easy runtime manipulation via JS if needed.
+    */
+    --hue-brand: 150; /* Primary Hue (Emerald Green) */
+    
+    /* Primary Brand Colors */
+    --brand-primary: hsl(var(--hue-brand), 100%, 35%);
+    --brand-hover: hsl(var(--hue-brand), 100%, 25%);
+    --brand-active: hsl(var(--hue-brand), 100%, 20%);
+    --brand-light: hsl(var(--hue-brand), 85%, 96%);
+    --brand-glow: hsla(var(--hue-brand), 100%, 40%, 0.4);
 
-        /* Hide bottom nav by default */
-        #bottom-nav {
-            display: none;
-        }
-        #bottom-nav.is-visible {
-            display: flex;
-        }
-        
-        /* Filter chip active state */
-        .filter-chip.active {
-            background-color: #65a30d; /* lime-600 */
-            color: white;
-            border-color: #65a30d; /* lime-600 */
-        }
+    /* Accent & Functional Colors */
+    --col-success: #10b981;
+    --col-warning: #f59e0b;
+    --col-danger: #ef4444;
+    --col-info: #3b82f6;
+    --col-text-on-primary: #ffffff;
 
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: none; /* Hidden by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        #loading-overlay.is-visible {
-            display: flex;
-        }
-        /* Spinner animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .spinner {
-            width: 56px;
-            height: 56px;
-            border: 8px solid #f3f4f6; /* gray-100 */
-            border-top-color: #65a30d; /* lime-600 */
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-    </style>
+    /* --- Theme: Light Mode (Default) --- 
+       Standard clean aesthetic inspired by iOS/modern web apps.
+    */
+    --bg-body: #0f172a;       /* Dark background outside the phone frame */
+    --bg-app: #f8fafc;        /* Light background inside the app */
+    --bg-surface: #ffffff;    /* White cards/elements */
+    --bg-surface-2: #f1f5f9;  /* Secondary background (inputs, etc.) */
+    --bg-surface-3: #e2e8f0;  /* Tertiary background */
+    
+    --text-main: #0f172a;     /* Primary Text */
+    --text-muted: #64748b;    /* Secondary Text */
+    --text-light: #94a3b8;    /* Tertiary Text */
+    
+    --border-color: #cbd5e1;  /* Borders */
+    
+    /* --- Shadows & Elevation --- 
+       Soft, diffused shadows for depth.
+    */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1);
+    --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.3);
+
+    /* --- Layout Constants --- 
+       ADJUSTED: Increased spacing for better breathing room.
+    */
+    --header-height: 70px;
+    --nav-height: 90px;
+    --radius-sm: 8px;
+    --radius-md: 20px; /* Rounder corners */
+    --radius-lg: 32px;
+    --app-width: 480px;
+    
+    /* *** SPACING VARIABLES ***
+       Used to maintain consistent margins across the app.
+    */
+    --spacing-container: 36px; 
+    --spacing-card: 24px;
+}
+
+/* --- Theme: Dark Mode Overrides --- 
+   Activated via data-theme="dark" on body tag.
+*/
+[data-theme="dark"] {
+    --bg-app: #020617;
+    --bg-surface: #0f172a;
+    --bg-surface-2: #1e293b;
+    --bg-surface-3: #334155;
+    
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-light: #64748b;
+    
+    --border-color: #1e293b;
+    
+    --brand-light: #064e3b;
+    --brand-primary: #10b981; /* Brighter green for dark backgrounds */
+    --col-text-on-primary: #020617;
+}
+
+/* --- Global Reset --- 
+   Standardizing box model and fonts.
+*/
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   2. GATEWAY & GALLERY STYLES
+   ========================================================================== 
+*/
+
+/* Full screen overlays */
+#gateway-screen, #gallery-screen {
+    position: absolute;
+    inset: 0;
+    background-color: #0f172a; /* Cinema Dark */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: white;
+}
+
+#gateway-screen.hidden, #gallery-screen.hidden {
+    display: none;
+}
+
+/* --- GATEWAY ENTRY OPTIONS (START MENU) --- 
+   UPDATED: Increased margins and padding significantly.
+*/
+.gateway-container {
+    height: 100%;
+    width: 100%;
+    max-width: var(--app-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Increased padding around the whole container */
+    padding: 40px; 
+    /* Increased gap between buttons */
+    gap: 40px; 
+}
+
+.gateway-logo {
+    margin-bottom: 60px;
+    text-align: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* The Main Buttons */
+.gateway-option {
+    width: 100%;
+    /* Removed fixed aspect ratio to allow text to expand naturally */
+    min-height: 220px; 
+    background: #1e293b;
+    border-radius: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    border: 3px solid #334155; /* Thicker border */
+    transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    
+    /* *** CRITICAL UPDATE *** */
+    /* Massive padding to ensure text never touches the edges */
+    padding: 40px; 
+}
+
+.gateway-option:active {
+    transform: scale(0.97);
+    background-color: #334155;
+}
+
+.gateway-option:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-5px);
+}
+
+.gateway-option h2 {
+    color: white;
+    margin-bottom: 16px;
+    font-size: 26px;
+    font-weight: 800;
+    z-index: 2;
+    line-height: 1.2;
+}
+
+.gateway-option p {
+    color: #94a3b8;
+    font-size: 16px;
+    /* Limit width to ensure readability */
+    max-width: 90%;
+    margin: 0;
+    z-index: 2;
+    line-height: 1.5;
+}
+
+.gateway-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    z-index: 2;
+}
+
+/* --- BEFORE & AFTER GALLERY (Vertical Stack) --- 
+*/
+.ba-header {
+    padding: 20px;
+    padding-top: 60px;
+    padding-left: var(--spacing-container);
+    padding-right: var(--spacing-container);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.ba-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-container);
+    max-width: var(--app-width);
+    margin: 0 auto;
+    width: 100%;
+}
+
+.ba-card {
+    margin-bottom: 48px;
+    background: #1e293b;
+    border-radius: 32px;
+    border: 1px solid #334155;
+    padding: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.ba-info {
+    margin-bottom: 24px;
+}
+
+.ba-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.ba-desc {
+    color: #94a3b8;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.ba-images {
+    display: flex;
+    flex-direction: column;
+    gap: 0; /* No gap, divider handles spacing */
+    border-radius: 20px;
+    overflow: hidden;
+    border: 4px solid #334155;
+}
+
+.ba-img-box {
+    position: relative;
+    width: 100%;
+    height: 240px;
+}
+
+.ba-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.ba-img-box:hover img {
+    transform: scale(1.05);
+}
+
+.ba-label {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Divider between Before/After */
+.ba-divider {
+    height: 6px;
+    background: #334155;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+
+.ba-divider::after {
+    content: '⬇ TRANSFORMED ⬇';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #334155;
+    color: #94a3b8;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 20px;
+    white-space: nowrap;
+    border: 2px solid #0f172a;
+}
+
+/* ==========================================================================
+   3. APP SHELL & LAYOUT
+   ========================================================================== 
+*/
+#app-root {
+    background-color: var(--bg-app);
+    width: 100%;
+    height: 100%;
+    max-width: var(--app-width);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+    display: none; /* Hidden until launched via Gateway */
+}
+
+#app-root.active {
+    display: flex;
+}
+
+/* Desktop Border - The Simulator Look */
+@media (min-width: 500px) {
+    #app-root {
+        height: 95vh;
+        border-radius: 40px;
+        border: 12px solid #1e293b;
+    }
+}
+
+/* View Container */
+#view-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden; 
+}
+
+/* Pages */
+.page {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: calc(var(--nav-height) + 30px); /* Extra padding for nav */
+    background-color: var(--bg-app);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.98);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.page.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+    z-index: 10;
+}
+
+.page::-webkit-scrollbar { display: none; }
+
+/* ==========================================================================
+   4. COMPONENT LIBRARY
+   ========================================================================== 
+*/
+
+/* Headers */
+.header {
+    height: var(--header-height);
+    padding: 0 var(--spacing-container);
+    padding-top: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+[data-theme="dark"] .header {
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.header-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+/* Cards */
+.card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-card);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.1s active, box-shadow 0.2s;
+    box-shadow: var(--shadow-sm);
+}
+
+.card:active {
+    transform: scale(0.99);
+}
+
+.card.no-pad {
+    padding: 0;
+}
+
+.card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background-color: var(--bg-surface-2);
+}
+
+/* Typography */
+h1 { 
+    font-size: 32px; 
+    font-weight: 800; 
+    letter-spacing: -0.5px; 
+    line-height: 1.1; 
+    color: var(--text-main); 
+    margin-bottom: 12px; 
+}
+
+h2 { 
+    font-size: 24px; 
+    font-weight: 700; 
+    margin-bottom: 10px; 
+    color: var(--text-main); 
+}
+
+h3 { 
+    font-size: 18px; 
+    font-weight: 800; 
+    margin-bottom: 16px; 
+    margin-top: 32px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    color: var(--text-main); 
+}
+
+h4 { 
+    font-size: 16px; 
+    font-weight: 700; 
+    margin-bottom: 6px; 
+    color: var(--text-main); 
+}
+
+p { 
+    font-size: 16px; 
+    line-height: 1.6; 
+    color: var(--text-muted); 
+    margin-bottom: 20px; 
+}
+
+.small-caps { 
+    font-size: 12px; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    font-weight: 700; 
+    color: var(--text-light); 
+}
+
+/* Layouts */
+.container { padding: var(--spacing-container); }
+.flex-row { display: flex; align-items: center; gap: 16px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-col { display: flex; flex-direction: column; gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 32px;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    gap: 10px;
+    font-family: inherit;
+}
+
+.btn:active {
+    transform: scale(0.96);
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background-color: var(--brand-primary);
+    color: white;
+    box-shadow: 0 8px 20px var(--brand-glow);
+}
+
+.btn-secondary {
+    background-color: var(--bg-surface-2);
+    color: var(--text-main);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.btn-danger {
+    background: #fee2e2;
+    color: var(--col-danger);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    width: auto;
+    padding: 10px 20px;
+}
+
+.btn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface-2);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 22px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-icon:active { transform: scale(0.9); }
+
+/* Inputs */
+.input-group {
+    margin-bottom: 24px;
+}
+
+.label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-main);
+}
+
+.input, select, textarea {
+    width: 100%;
+    padding: 18px;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-2);
+    border: 2px solid transparent;
+    color: var(--text-main);
+    font-size: 16px;
+    outline: none;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+.input:focus {
+    background: var(--bg-surface);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 4px var(--brand-light);
+}
+
+/* Checkboxes */
+.checkbox-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.checkbox-card.selected {
+    border-color: var(--brand-primary);
+    background: var(--brand-light);
+}
+.checkbox-card input {
+    width: 24px; height: 24px; accent-color: var(--brand-primary);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-primary { background: var(--brand-light); color: var(--brand-primary); }
+.badge-warning { background: #fef3c7; color: #d97706; }
+.badge-danger { background: #fee2e2; color: #ef4444; }
+.badge-neutral { background: var(--bg-surface-3); color: var(--text-muted); }
+
+/* Animations */
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ==========================================================================
+   5. MAP ENGINE STYLES
+   ========================================================================== 
+*/
+#map-viewport {
+    width: 100%;
+    height: 100%;
+    background: #e2e8f0;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+#map-viewport:active { cursor: grabbing; }
+
+#map-canvas {
+    width: 2000px;
+    height: 2000px;
+    background-color: #f1f5f9;
+    background-image: 
+        linear-gradient(#cbd5e1 2px, transparent 2px),
+        linear-gradient(90deg, #cbd5e1 2px, transparent 2px);
+    background-size: 50px 50px;
+    position: absolute;
+    top: -500px;
+    left: -500px;
+    transform-origin: 0 0;
+    transition: transform 0.05s linear;
+}
+[data-theme="dark"] #map-canvas {
+    background-color: #0f172a;
+    background-image: 
+        linear-gradient(#1e293b 2px, transparent 2px),
+        linear-gradient(90deg, #1e293b 2px, transparent 2px);
+}
+
+.map-pin {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    background: var(--brand-primary);
+    border: 4px solid white;
+    border-radius: 50% 50% 0 50%;
+    transform: rotate(45deg);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.map-pin svg {
+    transform: rotate(-45deg);
+    color: white;
+    width: 28px;
+    height: 28px;
+}
+
+.map-pin:hover {
+    transform: rotate(45deg) scale(1.2) translateY(-10px);
+    z-index: 20;
+    background: var(--col-warning);
+}
+
+.map-pin.event { background: var(--col-info); }
+.map-pin.urgent { background: var(--col-danger); }
+
+.pin-tooltip {
+    position: absolute;
+    bottom: 70px;
+    left: -70px;
+    width: 180px;
+    background: white;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    transform: rotate(-45deg);
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0f172a;
+    z-index: 30;
+}
+.map-pin:hover .pin-tooltip { opacity: 1; }
+
+/* ==========================================================================
+   6. NAVIGATION & MODALS
+   ========================================================================== 
+*/
+.nav {
+    height: var(--nav-height);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: 20px;
+    z-index: 100;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .nav { background: rgba(15, 23, 42, 0.95); }
+
+.nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    height: 100%;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.nav-btn svg { width: 28px; height: 28px; transition: 0.2s; }
+.nav-btn span { font-size: 11px; font-weight: 700; }
+.nav-btn.active { color: var(--brand-primary); }
+.nav-btn.active svg { transform: translateY(-4px); }
+
+.modal {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-app);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.modal.open { transform: translateY(0); }
+.modal-content { flex: 1; overflow-y: auto; padding: var(--spacing-container); }
+
+#toast {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--text-main);
+    color: var(--bg-surface);
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+.chips-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; }
+.chips-container::-webkit-scrollbar { display: none; }
+.chip {
+    white-space: nowrap; padding: 10px 24px; border-radius: 100px;
+    background: var(--bg-surface); border: 1px solid var(--border-color);
+    color: var(--text-muted); font-weight: 700; font-size: 14px; cursor: pointer;
+    transition: 0.2s;
+}
+.chip.active { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+
+</style>
 </head>
-<body class="text-gray-800">
+<body>
 
-    <!-- 
-      App Container 
-      Constrained width for mobile-first view, centered.
-    --><div class="container mx-auto max-w-lg bg-white shadow-2xl overflow-hidden min-h-screen">
-
-        <!-- 
-          =====================================
-          Loading Overlay (NEW)
-          =====================================
-        --><div id="loading-overlay">
-            <div class="spinner"></div>
-        </div>
-
-        <!-- 
-          =====================================
-          Page 1: Landing 
-          =====================================
-        --><div id="page-landing" class="page active-page p-8 pt-16 flex flex-col items-center justify-center h-screen text-center bg-lime-50">
-
-            <h1 class="text-5xl font-bold text-gray-800 mb-5">Adopt A Space</h1>
-            <p class="text-xl text-gray-600 mb-12">
-                Grow together in the Emirates. <br> Find and create green spaces in your city.
-            </p>
-            
-            <button onclick="app.navigate('page-login')" class="w-full bg-lime-600 text-white text-lg font-bold py-4 px-6 rounded-lg shadow-lg hover:bg-lime-700 transition duration-300 transform hover:scale-105">
-                Get Started
-            </button>
-        </div>
-
-        <!-- 
-          =====================================
-          Page 2: Login / Sign Up 
-          =====================================
-        --><div id="page-login" class="page p-8 pt-16 bg-lime-50">
-            <h1 class="text-4xl font-bold text-gray-800 mb-6">Join the Community</h1>
-            <p class="text-lg text-gray-600 mb-10">
-                Let's get you set up. We'll use your location to find projects near you. (No real login required for this demo!)
-            </p>
-            
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label for="name" class="block text-base font-medium text-gray-700 mb-2">Full Name</label>
-                    <input type="text" id="name" value="Alex M." class="w-full px-5 py-4 text-lg bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm">
-                </div>
-                
-                <div>
-                    <label for="email" class="block text-base font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="email" value="alex.m@example.com" class="w-full px-5 py-4 text-lg bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm">
-                </div>
-                
-                <div>
-                    <label for="location" class="block text-base font-medium text-gray-700 mb-2">Your Location (Neighborhood)</label>
-                    <input type="text" id="location" value="JLT, Dubai" class="w-full px-5 py-4 text-lg bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm">
-                </div>
-                
-                <button type="button" onclick="app.doLogin()" class="w-full bg-lime-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:bg-lime-700 transition duration-300 mt-8 text-lg">
-                    Sign Up & Find Your Space
-                </button>
-            </form>
-        </div>
-
-        <!-- 
-          =====================================
-          App Page 1: Home
-          =====================================
-        --><div id="page-home" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-24">
-                <header class="p-5 pt-10 bg-white shadow-sm flex justify-between items-center">
-                    <div>
-                        <h1 id="welcome-header" class="text-3xl font-bold text-gray-900">Welcome, Alex!</h1>
-                        <p id="location-header" class="text-lg text-gray-500">Your local hub: JLT, Dubai</p>
-                    </div>
-                    <button class="text-gray-400 hover:text-gray-700 p-2 rounded-full">
-                        <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.313 6.022c1.731.642 3.584 1.06 5.454 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0l-3.182 3.182m3.182-3.182L12 17.082M12 17.082l-3.182 3.182m3.182-3.182L12 17.082" />
-                        </svg>
-                    </button>
-                </header>
-
-                <div class="p-5 space-y-8">
-                    <!-- Your Next Event --><section>
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Next Event</h2>
-                        <div id="home-next-event" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                            <!-- Content rendered by JS --></div>
-                    </section>
-
-                    <!-- Nearby Projects --><section>
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Nearby Projects</h2>
-                        <div id="home-projects-list" class="space-y-6">
-                            <!-- Content rendered by JS --></div>
-                    </section>
-                    
-                    <!-- Community Updates --><section>
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Community Updates</h2>
-                        <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
-                            <h3 class="font-bold text-lg text-gray-900">New Ghaf Trees Planted!</h3>
-                            <p class="text-gray-600 mt-1">Thanks to the volunteers at The Greens Ghaf Garden, 10 new Ghaf saplings have been planted. Stop by and see them!</p>
-                        </div>
-                    </section>
-                </div>
-            </main>
-        </div>
-
-        <!-- 
-          =====================================
-          App Page 2: Projects
-          =====================================
-        --><div id="page-projects" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-24">
-                <header class="p-5 pt-10 bg-white shadow-sm sticky top-0 z-10">
-                    <div class="flex justify-between items-center mb-4">
-                        <h1 class="text-3xl font-bold text-gray-900">All Projects</h1>
-                        <button class="flex-shrink-0 bg-lime-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-lime-700 transition-all">
-                            Start a Project
-                        </button>
-                    </div>
-                    <!-- Search Bar --><div class="relative">
-                        <input type="text" id="project-search-bar" onkeyup="app.searchProjects(this.value)" placeholder="Search projects..." class="w-full pl-10 pr-4 py-3 text-base bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-                    </div>
-                </header>
-                <!-- Filter Chips --><div id="project-filters" class="flex space-x-3 p-5 overflow-x-auto">
-                    <button onclick="app.filterProjects('All')" class="filter-chip active flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">All</button>
-                    <button onclick="app.filterProjects('Near Me')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Near Me</button>
-                    <button onclick="app.filterProjects('Active')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Active</button>
-                    <button onclick="app.filterProjects('Planning')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Planning</button>
-                    <button onclick="app.filterProjects('Volunteering')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Volunteering</Ghaith></button>
-                </div>
-
-                <div id="projects-list-container" class="p-5 pt-0 space-y-6">
-                    <!-- Project cards will be rendered here by JS --></div>
-            </main>
-        </div>
-
-        <!-- 
-          =====================================
-          App Page 3: Events
-          =====================================
-        --><div id="page-events" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-24">
-                <header class="p-5 pt-10 bg-white shadow-sm sticky top-0 z-10">
-                     <div class="flex justify-between items-center mb-4">
-                        <h1 class="text-3xl font-bold text-gray-900">Upcoming Events</h1>
-                        <button class="flex-shrink-0 bg-lime-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-lime-700 transition-all">
-                            Host an Event
-                        </button>
-                    </div>
-                    <!-- Search Bar --><div class="relative">
-                        <input type="text" id="event-search-bar" onkeyup="app.searchEvents(this.value)" placeholder="Search events..." class="w-full pl-10 pr-4 py-3 text-base bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-                    </div>
-                </header>
-                <!-- Filter Chips --><div id="event-filters" class="flex space-x-3 p-5 overflow-x-auto">
-                    <button onclick="app.filterEvents('All')" class="filter-chip active flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">All</button>
-                    <button onclick="app.filterEvents('This Week')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">This Week</button>
-                    <button onclick="app.filterEvents('Workshops')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Workshops</button>
-                    <button onclick="app.filterEvents('Cleanups')" class="filter-chip flex-shrink-0 bg-white text-gray-700 border border-gray-300 text-sm font-medium px-4 py-2 rounded-full">Cleanups</button>
-                </div>
-
-                <div id="events-list-container" class="p-5 pt-0 space-y-6">
-                    <!-- Event cards will be rendered here by JS --></div>
-            </main>
+<div id="gateway-screen">
+    <div class="gateway-container">
+        <div class="gateway-logo">
+            <svg width="80" height="80" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+            <h1 style="color:white; margin-top:16px; font-size:36px;">Adopt A Space</h1>
         </div>
         
-        <!-- 
-          =====================================
-          App Page 4: Profile
-          =====================================
-        --><div id="page-profile" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-24">
-                <header class="p-5 pt-10 bg-white shadow-sm">
-                    <h1 class="text-3xl font-bold text-gray-900">Your Profile</h1>
-                </header>
-                <div class="p-5 space-y-8">
-                    <!-- Profile Card --><div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                        <div class="flex items-center space-x-5">
-                            <img class="w-20 h-20 rounded-full" src="https://placehold.co/100x100/A3E635/4D7C0F?text=Alex" alt="Profile picture">
-                            <div>
-                                <h2 id="profile-name" class="text-2xl font-bold text-gray-900">Alex M.</h2>
-                                <p id="profile-location" class="text-gray-500 text-lg">JLT, Dubai</p>
-                                <p id="profile-email" class="text-gray-600 text-base">alex.m@example.com</p>
-                            </div>
-                        </div>
-                        <button class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-200 transition duration-300 mt-5">
-                            Edit Profile
-                        </button>
-                    </div>
+        <div class="gateway-option" onclick="Gateway.openGallery()">
+            <div class="gateway-icon">📸</div>
+            <h2>Before & After</h2>
+            <p>See the real impact of community projects in our transformation gallery.</p>
+        </div>
 
-                    <!-- My Stats --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">My Stats</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-100 text-center">
-                                <p class="text-4xl font-bold text-lime-600" id="profile-events-count">0</p>
-                                <p class="text-gray-600">Events Attended</p>
-                            </div>
-                            <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-100 text-center">
-                                <p class="text-4xl font-bold text-lime-600" id="profile-hours-count">0</p>
-                                <p class="text-gray-600">Hours Volunteered</p>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- My Followed Projects (NEW) --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Followed Projects</h3>
-                        <div id="profile-followed-projects-list" class="space-y-4">
-                            <p class="text-gray-500">You're not following any projects yet.</p>
-                        </div>
-                    </section>
-                    
-                    <!-- My RSVPs --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">My RSVPs</h3>
-                        <div id="profile-events-list" class="space-y-4">
-                            <p class="text-gray-500">You haven't RSVP'd to any events yet.</p>
-                        </div>
-                    </section>
+        <div class="gateway-option" onclick="Gateway.startApp()" style="background: #0f172a; border-color: var(--col-success);">
+            <div class="gateway-icon">🚀</div>
+            <h2 style="color: var(--col-success);">Experience App</h2>
+            <p>Launch the full interactive simulation. Maps, Volunteering, and more.</p>
+        </div>
+    </div>
+</div>
 
-                    <!-- My Volunteer Roles --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">My Volunteer Roles</h3>
-                        <div id="profile-projects-list" class="space-y-4">
-                            <p class="text-gray-500">You haven't signed up to volunteer yet.</p>
-                        </div>
-                    </section>
-
-                    <!-- My Availability (NEW, static) --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">My Availability</h3>
-                        <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
-                            <div class="flex justify-between items-center">
-                                <p class="text-gray-600">Set your preferred times to volunteer.</p>
-                                <button class="text-lime-600 font-semibold">Manage</button>
-                            </div>
-                            <div class="flex space-x-2 mt-4">
-                                <span class="bg-lime-100 text-lime-800 text-sm font-medium px-3 py-1 rounded-full">Weekday Mornings</span>
-                                <span class="bg-lime-100 text-lime-800 text-sm font-medium px-3 py-1 rounded-full">Weekends</span>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- Community (NEW, static) --><section>
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Community</h3>
-                        <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
-                            <h4 class="text-lg font-bold text-gray-900 mb-3">Your Neighbors</h4>
-                            <div class="flex -space-x-2 overflow-hidden">
-                                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=FA" alt="Fatima A.">
-                                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=DL" alt="David L.">
-                                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=AJ" alt="Aisha J.">
-                                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=SM" alt="Saeed M.">
-                                <div class="inline-flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-white bg-gray-200 text-gray-700 font-medium">+12</div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <button onclick="app.navigate('page-settings')" class="w-full bg-white text-gray-700 font-bold py-4 px-6 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-300 mt-8">
-                        Settings
-                    </button>
+<div id="gallery-screen" class="hidden">
+    <div class="ba-header">
+        <span style="font-weight:800; font-size:20px;">Transformation Gallery</span>
+        <button onclick="Gateway.closeGallery()" style="background:none; border:none; color:white; font-size:16px; font-weight:700; cursor:pointer;">Close ✕</button>
+    </div>
+    <div class="ba-container">
+        
+        <div class="ba-card">
+            <div class="ba-info">
+                <div class="ba-title">Barsha Heights</div>
+                <div class="ba-desc">From a barren concrete slab to a thriving community farm producing 50kg of vegetables monthly.</div>
+            </div>
+            <div class="ba-images">
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7Oog9.png" alt="Before">
+                    <div class="ba-label" style="background:rgba(239,68,68,0.9);">Before</div>
                 </div>
-            </main>
+                <div class="ba-divider"></div>
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7On07.png" alt="After">
+                    <div class="ba-label" style="background:rgba(16,185,129,0.9);">After</div>
+                </div>
+            </div>
         </div>
 
+        <div class="ba-card">
+            <div class="ba-info">
+                <div class="ba-title">Al Quoz</div>
+                <div class="ba-desc">Over 200 volunteers cleared 500kg of plastic waste in a single morning session.</div>
+            </div>
+            <div class="ba-images">
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7Oqs2.png" alt="Before">
+                    <div class="ba-label" style="background:rgba(239,68,68,0.9);">Before</div>
+                </div>
+                <div class="ba-divider"></div>
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7OI5u.png" alt="After">
+                    <div class="ba-label" style="background:rgba(16,185,129,0.9);">After</div>
+                </div>
+            </div>
+        </div>
 
-        <!-- 
-          =====================================
-          App Page 5: Project Details
-          =====================================
-        --><div id="page-project-detail" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-8">
-                <!-- Back Button --><header class="p-4 pt-8 bg-gray-50">
-                    <button onclick="app.navigate('page-projects')" class="flex items-center text-gray-500 hover:text-gray-800 font-medium text-lg">
-                        <svg class="w-6 h-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                        </svg>
-                        Back to Projects
-                    </button>
-                </header>
+        <div class="ba-card">
+            <div class="ba-info">
+                <div class="ba-title">Jumeirah</div>
+                <div class="ba-desc">Mobilizing a community to come together and plant dozens of trees in a barren area.</div>
+            </div>
+            <div class="ba-images">
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7NsRa.png" alt="Before">
+                    <div class="ba-label" style="background:rgba(239,68,68,0.9);">Before</div>
+                </div>
+                <div class="ba-divider"></div>
+                <div class="ba-img-box">
+                    <img src="https://iili.io/fB7O2OG.png" alt="After">
+                    <div class="ba-label" style="background:rgba(16,185,129,0.9);">After</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="app-root">
+
+    <div id="toast">
+        <span id="toast-icon">✅</span>
+        <span id="toast-msg">Action Completed</span>
+    </div>
+
+    <div id="view-container">
+
+        <div id="page-onboarding" class="page active" style="z-index: 999; background: var(--bg-app);">
+            <div style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px;">
+                <div id="slide-1" class="fade-in">
+                    <div style="font-size:100px; margin-bottom:32px;">🌱</div>
+                    <h1 style="font-size:36px; margin-bottom:24px;">Adopt A Space</h1>
+                    <p>Join the community movement to reclaim, green, and clean our shared spaces.</p>
+                </div>
+                <div id="slide-2" class="fade-in" style="display:none;">
+                    <div style="font-size:100px; margin-bottom:32px;">🗺️</div>
+                    <h1 style="font-size:36px; margin-bottom:24px;">Explore & Act</h1>
+                    <p>Use the interactive map to find urgent projects and fun workshops nearby.</p>
+                </div>
                 
-                <div id="project-detail-content">
-                    <!-- Content rendered by JS --></div>
-            </main>
+                <div style="margin-top:80px; width:100%;">
+                    <button id="btn-next" class="btn btn-primary">Next Step &rarr;</button>
+                    <button id="btn-skip" class="btn btn-ghost" style="margin-top:16px;">Skip Intro</button>
+                </div>
+            </div>
         </div>
 
-        <!-- 
-          =====================================
-          App Page 6: Event Details
-          =====================================
-        --><div id="page-event-detail" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-8">
-                <!-- Back Button --><header class="p-4 pt-8 bg-gray-50">
-                    <button onclick="app.navigate('page-events')" class="flex items-center text-gray-500 hover:text-gray-800 font-medium text-lg">
-                        <svg class="w-6 h-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                        </svg>
-                        Back to Events
-                    </button>
-                </header>
+        <div id="page-auth" class="page" style="z-index: 998;">
+            <div class="container" style="padding-top: 100px;">
+                <h1>Welcome Back</h1>
+                <p>Let's get you signed in to continue your journey.</p>
                 
-                <div id="event-detail-content">
-                    <!-- Content rendered by JS --></div>
-            </main>
-        </div>
-
-        <!-- 
-          =====================================
-          App Page 7: Volunteer Sign-up
-          =====================================
-        --><div id="page-volunteer" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-8">
-                <!-- Back Button --><header class="p-4 pt-8 bg-gray-50">
-                    <button id="volunteer-back-btn" onclick="app.showProjectDetail(1)" class="flex items-center text-gray-500 hover:text-gray-800 font-medium text-lg">
-                        <svg class="w-6 h-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                        </svg>
-                        Back to Project
-                    </button>
-                </header>
-
-                <div class="p-5">
-                    <h1 id="volunteer-title" class="text-3xl font-bold text-gray-900 mb-4">Run the SkyGarden Cafe</h1>
-                    <p id="volunteer-desc" class="text-gray-700 text-lg mb-8">
-                        We're looking for friendly faces to serve coffee and snacks to our construction volunteers and visitors. All proceeds go directly to the SkyGarden fund. No experience needed!
-                    </p>
-
-                    <!-- Success Message (hidden) --><div id="volunteer-success" class="hidden p-5 bg-green-100 border border-green-300 text-green-800 rounded-lg mb-6">
-                        <h4 class="font-bold text-lg">Thank you!</h4>
-                        <p>We've received your interest and will be in touch soon with more details.</p>
+                <form id="login-form" style="margin-top:40px;">
+                    <div class="input-group">
+                        <label class="label">Display Name</label>
+                        <input type="text" id="login-name" class="input" placeholder="e.g., Alex Smith" value="Alex M.">
                     </div>
+                    <div class="input-group">
+                        <label class="label">Neighborhood</label>
+                        <input type="text" id="login-loc" class="input" placeholder="e.g., Downtown" value="JLT, Dubai">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Profile</button>
+                </form>
+                
+                <button onclick="Gateway.showGateway()" class="btn btn-ghost" style="margin-top:32px;">&larr; Exit to Gateway</button>
+            </div>
+        </div>
 
-                    <!-- Volunteer Form --><form id="volunteer-form" class="space-y-6">
-                        <input type="hidden" id="volunteer-project-id" value="">
-                        <input type="hidden" id="volunteer-role" value="">
-                        
+        <div id="page-home" class="page">
+            <div class="header">
+                <div>
+                    <div class="small-caps">Good Morning</div>
+                    <h2 style="margin:0;" id="home-user-name">Alex</h2>
+                </div>
+                <div class="flex-row">
+                    <div class="badge badge-warning" style="padding:8px 16px; font-size:12px;">⚡ <span id="home-pts">0</span> XP</div>
+                    <div class="btn-icon" onclick="app.nav('page-profile')">👤</div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="card" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-hover)); border:none; color:white; padding:32px;">
+                    <div class="flex-between">
                         <div>
-                            <label class="block text-base font-medium text-gray-700 mb-2">Your Availability</label>
-                            <div class="space-y-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <label class="flex items-center"><input type="checkbox" class="h-5 w-5 text-lime-600 rounded border-gray-300 focus:ring-lime-500 mr-3">Weekday Mornings</label>
-                                <label class="flex items-center"><input type="checkbox" class="h-5 w-5 text-lime-600 rounded border-gray-300 focus:ring-lime-500 mr-3">Weekday Afternoons</label>
-                                <label class="flex items-center"><input type="checkbox" class="h-5 w-5 text-lime-600 rounded border-gray-300 focus:ring-lime-500 mr-3">Weekend Mornings</label>
-                                <label class="flex items-center"><input type="checkbox" class="h-5 w-5 text-lime-600 rounded border-gray-300 focus:ring-lime-500 mr-3">Weekend Afternoons</label>
-                            </div>
+                            <div style="font-size:13px; opacity:0.8; font-weight:700; text-transform:uppercase;">Current Level</div>
+                            <h2 style="color:white; margin:0;">Sprout 🌱</h2>
                         </div>
-                        
-                        <div>
-                            <label for="message" class="block text-base font-medium text-gray-700 mb-2">Any questions? (Optional)</label>
-                            <textarea id="message" rows="3" placeholder="I'm excited to help!" class="w-full px-4 py-3 text-lg bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm"></textarea>
+                        <div style="text-align:right;">
+                            <div style="font-size:40px; font-weight:800;">#42</div>
+                            <div style="font-size:13px; opacity:0.8;">Rank</div>
                         </div>
-                        
-                        <button type="button" onclick="app.submitVolunteer()" class="w-full bg-lime-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:bg-lime-700 transition duration-300 mt-4 text-lg">
-                            Submit My Interest
-                        </button>
-                    </form>
+                    </div>
+                    <div style="margin-top:24px; background:rgba(255,255,255,0.2); height:10px; border-radius:10px; overflow:hidden;">
+                        <div style="width:35%; height:100%; background:white;"></div>
+                    </div>
+                    <div style="font-size:13px; margin-top:12px; opacity:0.8; font-weight:600;">350 / 1000 XP to Sapling</div>
                 </div>
-            </main>
-        </div>
 
-        <!-- 
-          =====================================
-          App Page 8: Settings (NEW)
-          =====================================
-        --><div id="page-settings" class="page bg-gray-50">
-            <main class="overflow-y-auto pb-8">
-                <!-- Back Button --><header class="p-4 pt-8 bg-gray-50 flex items-center">
-                    <button onclick="app.navigate('page-profile')" class="flex items-center text-gray-500 hover:text-gray-800 font-medium text-lg">
-                        <svg class="w-6 h-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                        </svg>
-                        Back to Profile
+                <h3>Quick Actions</h3>
+                <div class="grid-2" style="margin-bottom:32px;">
+                    <button onclick="app.nav('page-map')" class="card no-pad" style="height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: var(--bg-surface); border:1px solid var(--border-color); cursor:pointer;">
+                        <span style="font-size:36px; margin-bottom:12px;">🗺️</span>
+                        <span style="font-weight:700; font-size:15px; color:var(--text-main);">Open Map</span>
                     </button>
-                </header>
-                
-                <div class="p-5 space-y-6">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-4">Settings</h1>
-                    
-                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                        <a href="#" class="block p-5 border-b border-gray-200 hover:bg-gray-50 flex justify-between items-center">
-                            <span class="text-lg font-medium text-gray-800">Edit Profile</span>
-                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-                        </a>
-                        <a href="#" class="block p-5 border-b border-gray-200 hover:bg-gray-50 flex justify-between items-center">
-                            <span class="text-lg font-medium text-gray-800">Manage Notifications</span>
-                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-                        </a>
-                        <!-- Dark Mode Toggle (NEW) --><div class="block p-5 border-b border-gray-200 flex justify-between items-center">
-                            <span class="text-lg font-medium text-gray-800">Dark Mode</span>
-                            <button class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-lime-600 focus:ring-offset-2" type="button" role="switch" aria-checked="false">
-                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                            </button>
-                        </div>
-                        <a href="#" class="block p-5 border-b border-gray-200 hover:bg-gray-50 flex justify-between items-center">
-                            <span class="text-lg font-medium text-gray-800">Privacy Policy</span>
-                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-                        </a>
-                        <a href="#" class="block p-5 hover:bg-gray-50 flex justify-between items-center">
-                            <span class="text-lg font-medium text-gray-800">Report an Issue</span>
-                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-                        </a>
-                    </div>
-                    
-                    <button onclick="app.navigate('page-landing')" class="w-full bg-gray-200 text-gray-700 font-bold py-4 px-6 rounded-lg hover:bg-gray-300 transition duration-300 mt-8">
-                        Log Out (Demo)
+                    <button onclick="app.openCreateModal()" class="card no-pad" style="height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: var(--bg-surface); border:1px solid var(--border-color); cursor:pointer;">
+                        <span style="font-size:36px; margin-bottom:12px;">➕</span>
+                        <span style="font-weight:700; font-size:15px; color:var(--text-main);">Host Project</span>
                     </button>
-
-                    <p class="text-center text-gray-400 text-sm mt-8">
-                        Adopt A Space v1.1.0
-                    </p>
                 </div>
-            </main>
+
+                <h3>Featured Projects <span style="font-size:13px; color:var(--brand-primary); cursor:pointer;" onclick="app.nav('page-explore')">See All</span></h3>
+                <div id="home-featured-list">
+                    </div>
+            </div>
         </div>
 
-    </div> <!-- End App Container --><!-- 
-      =====================================
-      Bottom Navigation Bar
-      =====================================
-    --><nav id="bottom-nav" class="hidden fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <div class="flex justify-around h-20">
-            <button id="nav-home" onclick="app.navigate('page-home')" class="nav-button active flex-1 flex flex-col items-center justify-center text-gray-500 transition-all duration-200">
-                <svg class="nav-icon w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                <span class="text-xs font-medium">Home</span>
-            </button>
-            <button id="nav-projects" onclick="app.navigate('page-projects')" class="nav-button flex-1 flex flex-col items-center justify-center text-gray-500 transition-all duration-200">
-                <svg class="nav-icon w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .121-1.602l-2.143-6.43a1.095 1.095 0 0 0-1.022-.743H8.047a1.095 1.095 0 0 0-1.022.743l-2.143 6.43a2.18 2.18 0 0 0 .121 1.602m16.5 0a2.18 2.18 0 0 1-2.22 1.602H5.72a2.18 2.18 0 0 1-2.22-1.602m16.5 0B21 13.75 19.095 7.75 18.25 5.5H5.75l-.845 2.25L3 13.75m16.5 0a2.25 2.25 0 0 1-2.25 2.25H5.75a2.25 2.25 0 0 1-2.25-2.25m16.5 0c0 .621-.504 1.125-1.125 1.125H4.125C3.504 15.275 3 14.771 3 14.15" /></svg>
-                <span class="text-xs font-medium">Projects</span>
-            </button>
-            <button id="nav-events" onclick="app.navigate('page-events')" class="nav-button flex-1 flex flex-col items-center justify-center text-gray-500 transition-all duration-200">
-                <svg class="nav-icon w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Z" /></svg>
-                <span class="text-xs font-medium">Events</span>
-            </button>
-            <button id="nav-profile" onclick="app.navigate('page-profile')" class="nav-button flex-1 flex flex-col items-center justify-center text-gray-500 transition-all duration-200">
-                <svg class="nav-icon w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                <span class="text-xs font-medium">Profile</span>
-            </button>
+        <div id="page-map" class="page" style="padding-bottom:0; overflow:hidden;">
+            <div style="position:absolute; top:24px; left:24px; z-index:20;">
+                <button onclick="app.nav('page-explore')" class="btn-icon" style="background:white; box-shadow:var(--shadow-md);">&larr;</button>
+            </div>
+            
+            <div style="position:absolute; top:24px; right:24px; z-index:20;">
+                <button class="btn-icon" style="background:white; box-shadow:var(--shadow-md);" onclick="app.mapEngine.reset()">🎯</button>
+            </div>
+
+            <div id="map-viewport">
+                <div id="map-canvas">
+                    <div style="position:absolute; top:350px; left:550px; width:250px; height:250px; border: 6px solid rgba(0,0,0,0.05); border-radius:30px;"></div>
+                    <div style="position:absolute; top:400px; left:600px; font-size:120px; opacity:0.1; pointer-events:none;">🏢</div>
+                    <div style="position:absolute; top:1200px; left:800px; font-size:180px; opacity:0.1; pointer-events:none;">🌳</div>
+                </div>
+            </div>
         </div>
-    </nav>
 
-    <script>
-        const app = {
-            // Application State
-            state: {
-                currentPage: 'page-landing',
-                userName: 'there',
-                userLocation: 'your neighborhood',
-                userEmail: 'user@example.com',
-                rsvpedEvents: [], // Array of event IDs
-                volunteeredProjects: [], // Array of { projectId, role } objects
-                followedProjects: [], // Array of project IDs (NEW)
-                activeFilters: { // NEW
-                    projects: 'All',
-                    events: 'All'
-                },
-                searchQueries: { // NEW
-                    projects: '',
-                    events: ''
-                }
-            },
+        <div id="page-explore" class="page">
+            <div class="header">
+                <div class="header-title">Explore</div>
+                <div class="btn-icon" onclick="app.nav('page-map')">🗺️</div>
+            </div>
+            <div class="container">
+                <div class="input-group">
+                    <input type="text" class="input" placeholder="Search projects, events..." onkeyup="app.filterList(this.value)">
+                </div>
+                
+                <div class="chips-container">
+                    <button class="chip active" onclick="app.setCategory('All', this)">All</button>
+                    <button class="chip" onclick="app.setCategory('Garden', this)">Gardens</button>
+                    <button class="chip" onclick="app.setCategory('Cleanup', this)">Cleanups</button>
+                    <button class="chip" onclick="app.setCategory('Social', this)">Social</button>
+                    <button class="chip" onclick="app.setCategory('Workshop', this)">Workshops</button>
+                </div>
+
+                <div id="explore-list">
+                    </div>
+            </div>
+        </div>
+
+        <div id="page-profile" class="page">
+            <div class="header">
+                <div class="header-title">Profile</div>
+                <div class="btn-icon" onclick="app.openSettings()">⚙️</div>
+            </div>
+            <div class="container">
+                <div class="card" style="text-align:center; padding:40px 24px;">
+                    <div style="width:100px; height:100px; background:var(--brand-light); color:var(--brand-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:800; margin:0 auto 24px;">A</div>
+                    <h2 id="profile-name">Alex M.</h2>
+                    <p id="profile-loc">JLT, Dubai</p>
+                    
+                    <div class="grid-2" style="margin-top:32px;">
+                        <div style="background:var(--bg-surface-2); padding:20px; border-radius:20px;">
+                            <div style="font-weight:800; font-size:28px; color:var(--text-main);" id="stat-events">0</div>
+                            <div class="small-caps">Events</div>
+                        </div>
+                        <div style="background:var(--bg-surface-2); padding:20px; border-radius:20px;">
+                            <div style="font-weight:800; font-size:28px; color:var(--text-main);" id="stat-hours">0</div>
+                            <div class="small-caps">Hours</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>My Schedule</h3>
+                <div id="profile-schedule-list">
+                    <div style="text-align:center; padding:32px; color:var(--text-muted); font-style:italic; background:var(--bg-surface); border-radius:20px; border:1px dashed var(--border-color);">No upcoming activities.</div>
+                </div>
+
+                <h3 style="margin-top:40px;">Pending Applications</h3>
+                <div id="profile-pending-list"></div>
+            </div>
+        </div>
+
+    </div> <div id="modal-project" class="modal">
+        <div class="header">
+            <button class="btn-ghost" onclick="app.closeModal('modal-project')">&larr; Back</button>
+            <div class="flex-row">
+                <button class="btn-icon" style="width:36px; height:36px; font-size:16px;">❤️</button>
+                <button class="btn-icon" style="width:36px; height:36px; font-size:16px;">🔗</button>
+            </div>
+        </div>
+        <div class="modal-content" id="project-detail-content">
+            </div>
+    </div>
+
+    <div id="modal-volunteer" class="modal" style="z-index:250;">
+        <div class="header">
+            <button class="btn-ghost" onclick="app.closeModal('modal-volunteer')">Cancel</button>
+            <div class="header-title">Apply</div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="modal-content">
+            <div id="vol-step-1">
+                <h2>Select a Role</h2>
+                <p>Choose how you'd like to contribute to this project.</p>
+                <div id="vol-roles-list"></div>
+            </div>
             
-            // List of pages that should show the main bottom navigation
-            mainNavPages: ['page-home', 'page-projects', 'page-events', 'page-profile'],
-
-            // Mock Data for the app
-            mockData: {
-                projects: [
-                    {
-                        id: 1,
-                        title: 'JLT Park Rooftop Garden',
-                        status: 'Active',
-                        statusColor: 'green',
-                        imageUrl: 'https://placehold.co/600x400/A3E635/4D7C0F?text=JLT+Rooftop+Garden',
-                        location: 'Cluster B, JLT (Rooftop)',
-                        description: 'We are transforming the rooftop of the community centre into a vibrant garden and social space. This ambitious project is currently in full swing!',
-                        lead: {
-                            name: 'Fatima A.',
-                            avatar: 'https://placehold.co/100x100/EBFBFF/7F9C0A?text=Fatima'
-                        },
-                        timeline: [ // Used for progress bar
-                            { name: 'Phase 1: Planning', completed: true },
-                            { name: 'Phase 2: Construction', completed: true },
-                            { name: 'Phase 3: Planting', completed: true },
-                            { name: 'Phase 4: Grand Opening', completed: false },
-                        ],
-                        gallery: [
-                            'https://placehold.co/400x300/A3E635/4D7C0F?text=Gallery+1', 
-                            'https://placehold.co/400x300/A3E635/4D7C0F?text=Gallery+2', 
-                            'https://placehold.co/400x300/A3E635/4D7C0F?text=Gallery+3'
-                        ],
-                        needs: [
-                            {
-                                role: 'Rooftop Cafe Volunteer',
-                                description: 'Help run our temporary cafe to support the renovation! Serve coffee and karak.',
-                                commitment: '4hr shifts, weekends'
-                            },
-                            {
-                                role: 'Painting Crew',
-                                description: 'We have benches, planters, and murals that need a splash of color.',
-                                commitment: 'Flexible, weekdays'
-                            },
-                            {
-                                role: 'Carpenter / Builder',
-                                description: 'Help us build the final set of raised garden beds and seating areas.',
-                                commitment: 'Project-based'
-                            }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        title: 'Safa Park Cleanup Drive',
-                        status: 'Planning',
-                        statusColor: 'blue',
-                        imageUrl: 'https://placehold.co/600x400/BFDBFE/1E3A8A?text=Safa+Park+Cleanup',
-                        location: 'Safa Park, Gate 1',
-                        description: 'Join us for our monthly effort to clean up Safa Park. We provide gloves, bags, and tools. A great way to make an immediate impact and meet neighbors.',
-                        lead: {
-                            name: 'David L.',
-                            avatar: 'https://placehold.co/100x100/EBFBFF/7F9C0A?text=David'
-                        },
-                        timeline: [
-                            { name: 'Planning', completed: true },
-                            { name: 'Volunteer Signups', completed: false },
-                            { name: 'Cleanup Day', completed: false },
-                        ],
-                        gallery: [
-                            'https://placehold.co/400x300/BFDBFE/1E3A8A?text=Cleanup+1', 
-                            'https://placehold.co/400x300/BFDBFE/1E3A8A?text=Cleanup+2'
-                        ],
-                        needs: [
-                            {
-                                role: 'General Volunteer',
-                                description: 'Show up on cleanup day! We need all hands on deck to pick up trash.',
-                                commitment: '3hrs, 1st Saturday/month'
-                            },
-                            {
-                                role: 'Team Lead',
-                                description: 'Help manage a small group of volunteers and coordinate supplies.',
-                                commitment: '4hrs, 1st Sat/month'
-                            }
-                        ]
-                    },
-                    {
-                        id: 3,
-                        title: 'The Greens Ghaf Garden',
-                        status: 'Active',
-                        statusColor: 'green',
-                        imageUrl: 'https://placehold.co/600x400/D1FAE5/065F46?text=Ghaf+Garden',
-                        location: 'The Greens Community Centre',
-                        description: 'Our community garden is fully operational! We are growing local vegetables and protecting native Ghaf trees. We need help maintaining the plots.',
-                        lead: {
-                            name: 'Aisha J.',
-                            avatar: 'https://placehold.co/100x100/EBFBFF/7F9C0A?text=Aisha'
-                        },
-                        timeline: [
-                            { name: 'Hub Open', completed: true },
-                            { name: 'Plots Assigned', completed: true },
-                            { name: 'Ongoing Maintenance', completed: false },
-                        ],
-                        gallery: [
-                            'https://placehold.co/400x300/D1FAE5/065F46?text=Garden+1', 
-                            'https://placehold.co/400x300/D1FAE5/065F46?text=Garden+2'
-                        ],
-                        needs: [
-                            {
-                                role: 'Garden Weeding',
-                                description: 'Help manage the plots and keep them weed-free for our veggies to grow.',
-                                commitment: '1-2hrs, weekly'
-                            }
-                        ]
-                    }
-                ],
-                events: [
-                    {
-                        id: 1,
-                        projectId: 1,
-                        title: 'Rooftop Garden Planning',
-                        date: 'Sat, Nov 15th @ 11:00 AM',
-                        location: 'Cluster B, Community Room',
-                        type: 'Workshops', // NEW
-                        imageUrl: 'https://placehold.co/600x400/FEF9C3/854D0E?text=Event+Planning',
-                        description: 'Help us plan the final planting layout for the JLT Rooftop Garden! We will be mapping out what vegetables, herbs, and flowers to plant. Bring your ideas!'
-                    },
-                    {
-                        id: 2,
-                        projectId: 3,
-                        title: 'Intro to Urban Gardening',
-                        date: 'Wed, Nov 19th @ 6:00 PM',
-                        location: 'The Greens Ghaf Garden',
-                        type: 'Workshops', // NEW
-                        imageUrl: 'https://placehold.co/600x400/E0E7FF/3730A3?text=Workshop',
-                        description: 'New to gardening? Join Aisha for a free workshop on the basics of desert gardening and composting. Learn what grows best in the UAE climate!'
-                    },
-                    {
-                        id: 3,
-                        projectId: 2,
-                        title: 'Safa Park Cleanup Day',
-                        date: 'Sat, Dec 6th @ 8:00 AM',
-                        location: 'Safa Park, Gate 1',
-                        type: 'Cleanups', // NEW
-                        imageUrl: 'https://placehold.co/600x400/DBEAFE/1D4ED8?text=Cleanup+Day',
-                        description: 'Our big monthly cleanup day! Meet at Gate 1. We provide all supplies. Wear sturdy shoes and bring a reusable water bottle. Let\'s beat the heat!'
-                    }
-                ]
-            },
-
-            // Initialization function
-            init() {
-                document.addEventListener('DOMContentLoaded', () => {
-                    app.renderAll(); // Pre-render content
-                    app.navigate('page-landing'); // Show landing page first
-                });
-            },
-
-            // Main Page Navigation
-            navigate(pageId) {
-                // Hide all pages by setting display: none
-                document.querySelectorAll('.page').forEach(page => {
-                    page.style.display = 'none';
-                    page.classList.remove('active-page');
-                });
+            <div id="vol-step-2" style="display:none;">
+                <h2>Select Availability</h2>
+                <p>When are you free to help out?</p>
                 
-                // Show the target page by setting display: block
-                const newPage = document.getElementById(pageId);
-                if (newPage) {
-                    newPage.style.display = 'block';
-                    newPage.classList.add('active-page');
-                } else {
-                    console.error("Navigation failed: Page not found -", pageId);
-                    return; // Stop if page doesn't exist
-                }
+                <div class="card no-pad">
+                    <label class="checkbox-card">
+                        <input type="checkbox" checked>
+                        <span>Weekday Mornings (8am - 12pm)</span>
+                    </label>
+                    <div style="height:1px; background:var(--border-color);"></div>
+                    <label class="checkbox-card">
+                        <input type="checkbox">
+                        <span>Weekday Afternoons (1pm - 5pm)</span>
+                    </label>
+                    <div style="height:1px; background:var(--border-color);"></div>
+                    <label class="checkbox-card">
+                        <input type="checkbox" checked>
+                        <span>Weekends (Flexible)</span>
+                    </label>
+                </div>
 
-                app.state.currentPage = pageId;
-                window.scrollTo(0, 0); // Scroll to top on page change
-
-                const bottomNav = document.getElementById('bottom-nav');
+                <div class="input-group">
+                    <label class="label">Notes for Organizer</label>
+                    <textarea id="vol-notes" class="input" rows="3" placeholder="I have previous experience with..."></textarea>
+                </div>
                 
-                // Show or hide bottom nav
-                if (app.mainNavPages.includes(pageId)) {
-                    bottomNav.classList.add('is-visible');
-                    
-                    // Clear all active buttons
-                    document.querySelectorAll('.nav-button').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
+                <button class="btn btn-primary" onclick="app.submitVolunteer()">Submit Application</button>
+                <button class="btn btn-ghost" onclick="app.volBack()" style="margin-top:12px;">Go Back</button>
+            </div>
+        </div>
+    </div>
 
-                    // Find the correct button to activate
-                    let navButtonId = null;
-                    
-                    if (pageId.includes('page-home')) navButtonId = 'nav-home';
-                    if (pageId.includes('page-projects') || pageId.includes('page-project-detail')) navButtonId = 'nav-projects';
-                    if (pageId.includes('page-events') || pageId.includes('page-event-detail')) navButtonId = 'nav-events';
-                    if (pageId.includes('page-profile') || pageId.includes('page-settings')) navButtonId = 'nav-profile';
-
-                    if (navButtonId) {
-                        const activeButton = document.getElementById(navButtonId);
-                        if(activeButton) {
-                            activeButton.classList.add('active');
-                        }
-                    }
-
-                } else {
-                    bottomNav.classList.remove('is-visible');
-                }
-
-                // Re-render dynamic pages when navigating to them
-                if (pageId === 'page-profile') {
-                    app.renderProfile();
-                }
-                if (pageId === 'page-home') {
-                    app.renderHome();
-                }
-            },
-
-            // Fake Login
-            doLogin() {
-                const nameInput = document.getElementById('name').value || 'Alex';
-                const locationInput = document.getElementById('location').value || 'your neighborhood';
-                const emailInput = document.getElementById('email').value || 'alex.m@example.com';
-                
-                app.state.userName = nameInput;
-                app.state.userEmail = emailInput;
-                app.state.userLocation = locationInput;
-
-                // Update headers on main page
-                document.getElementById('welcome-header').textContent = `Welcome, ${nameInput.split(' ')[0]}!`;
-                document.getElementById('location-header').textContent = `Your local hub: ${locationInput}`;
-                
-                // Update profile page
-                document.getElementById('profile-name').textContent = nameInput;
-                document.getElementById('profile-location').textContent = locationInput;
-                document.getElementById('profile-email').textContent = emailInput;
-
-                // Show loading spinner (NEW)
-                document.getElementById('loading-overlay').classList.add('is-visible');
-                
-                // Simulate network request
-                setTimeout(() => {
-                    document.getElementById('loading-overlay').classList.remove('is-visible');
-                    app.renderHome();
-                    app.navigate('page-home'); // Navigate to home page
-                }, 1000); // 1 second delay
-            },
-
-            // Render all dynamic content
-            renderAll() {
-                app.filterAndRenderProjects();
-                app.filterAndRenderEvents();
-                app.renderHome();
-                app.renderProfile();
-            },
-
-            // Render Home Dashboard
-            renderHome() {
-                const nextEvent = app.mockData.events.find(e => !app.state.rsvpedEvents.includes(e.id)) || app.mockData.events[0];
-                const eventContainer = document.getElementById('home-next-event');
-                if (nextEvent) {
-                    eventContainer.innerHTML = app.createEventCard(nextEvent, true);
-                }
-
-                const projectsContainer = document.getElementById('home-projects-list');
-                projectsContainer.innerHTML = '';
-                app.mockData.projects.slice(0, 2).forEach(project => {
-                    projectsContainer.innerHTML += app.createProjectCard(project);
-                });
-            },
-
-            // --- Filter and Search Logic ---
-            filterProjects(filter) {
-                app.state.activeFilters.projects = filter;
-                document.querySelectorAll('#project-filters .filter-chip').forEach(chip => {
-                    chip.classList.remove('active');
-                    if (chip.textContent === filter) {
-                        chip.classList.add('active');
-                    }
-                });
-                app.filterAndRenderProjects();
-            },
-            searchProjects(query) {
-                app.state.searchQueries.projects = query.toLowerCase();
-                app.filterAndRenderProjects();
-            },
-            filterAndRenderProjects() {
-                const container = document.getElementById('projects-list-container');
-                container.innerHTML = '';
-                const filter = app.state.activeFilters.projects;
-                const query = app.state.searchQueries.projects;
-
-                let filtered = app.mockData.projects.filter(project => {
-                    const matchesFilter = (filter === 'All') ||
-                                        (filter === 'Near Me') || // (No location logic, just show all for demo)
-                                        (filter === 'Active' && project.status === 'Active') ||
-                                        (filter === 'Planning' && project.status === 'Planning') ||
-                                        (filter === 'Volunteering' && project.needs.length > 0);
-                    
-                    const matchesSearch = !query || 
-                                        project.title.toLowerCase().includes(query) || 
-                                        project.description.toLowerCase().includes(query) ||
-                                        project.location.toLowerCase().includes(query);
-
-                    return matchesFilter && matchesSearch;
-                });
-
-                if (filtered.length === 0) {
-                    container.innerHTML = `<p class="text-gray-500 text-center">No projects found matching your criteria.</p>`;
-                } else {
-                    filtered.forEach(project => {
-                        container.innerHTML += app.createProjectCard(project);
-                    });
-                }
-            },
-
-            filterEvents(filter) {
-                app.state.activeFilters.events = filter;
-                document.querySelectorAll('#event-filters .filter-chip').forEach(chip => {
-                    chip.classList.remove('active');
-                    if (chip.textContent === filter) {
-                        chip.classList.add('active');
-                    }
-                });
-                app.filterAndRenderEvents();
-            },
-            searchEvents(query) {
-                app.state.searchQueries.events = query.toLowerCase();
-                app.filterAndRenderEvents();
-            },
-            filterAndRenderEvents() {
-                const container = document.getElementById('events-list-container');
-                container.innerHTML = '';
-                const filter = app.state.activeFilters.events;
-                const query = app.state.searchQueries.events;
-
-                let filtered = app.mockData.events.filter(event => {
-                    const matchesFilter = (filter === 'All') ||
-                                        (filter === 'This Week') || // (No date logic, just show all for demo)
-                                        (filter === 'Workshops' && event.type === 'Workshops') ||
-                                        (filter === 'Cleanups' && event.type === 'Cleanups');
-                    
-                    const matchesSearch = !query || 
-                                        event.title.toLowerCase().includes(query) || 
-                                        event.description.toLowerCase().includes(query) ||
-                                        event.location.toLowerCase().includes(query);
-
-                    return matchesFilter && matchesSearch;
-                });
-
-                if (filtered.length === 0) {
-                    container.innerHTML = `<p class="text-gray-500 text-center">No events found matching your criteria.</p>`;
-                } else {
-                    filtered.forEach(event => {
-                        container.innerHTML += app.createEventCard(event);
-                    });
-                }
-            },
-
-            // Render Profile Page
-            renderProfile() {
-                // Render RSVPs
-                const eventsList = document.getElementById('profile-events-list');
-                eventsList.innerHTML = '';
-                if (app.state.rsvpedEvents.length === 0) {
-                    eventsList.innerHTML = '<p class="text-gray-500">You haven\'t RSVP\'d to any events yet.</p>';
-                } else {
-                    app.state.rsvpedEvents.forEach(eventId => {
-                        const event = app.mockData.events.find(e => e.id === eventId);
-                        if (event) {
-                            eventsList.innerHTML += `
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                                    <h4 class="font-bold text-gray-900">${event.title}</h4>
-                                    <p class="text-gray-600 text-sm">${event.date} - ${event.location}</p>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-                document.getElementById('profile-events-count').textContent = app.state.rsvpedEvents.length;
-
-                // Render Volunteer Roles
-                const projectsList = document.getElementById('profile-projects-list');
-                projectsList.innerHTML = '';
-                if (app.state.volunteeredProjects.length === 0) {
-                    projectsList.innerHTML = '<p class="text-gray-500">You haven\'t signed up to volunteer yet.</p>';
-                } else {
-                    app.state.volunteeredProjects.forEach(vol => {
-                        const project = app.mockData.projects.find(p => p.id === vol.projectId);
-                        if (project) {
-                            projectsList.innerHTML += `
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                                    <h4 class="font-bold text-gray-900">${vol.role}</h4>
-                                    <p class="text-gray-600 text-sm">Project: ${project.title}</p>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-                document.getElementById('profile-hours-count').textContent = app.state.volunteeredProjects.length * 4; // Fake 4 hours per role
+    <div id="modal-settings" class="modal">
+        <div class="header">
+            <button class="btn-ghost" onclick="app.closeModal('modal-settings')">&larr; Back</button>
+            <div class="header-title">Settings</div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="modal-content">
+            <div class="card">
+                <div class="flex-between" style="padding-bottom:20px; border-bottom:1px solid var(--border-color);">
+                    <span style="font-weight:700;">Dark Mode</span>
+                    <button class="btn-ghost" style="color:var(--brand-primary);" onclick="app.toggleTheme()">Toggle</button>
+                </div>
+                <div class="flex-between" style="padding:20px 0; border-bottom:1px solid var(--border-color);">
+                    <span style="font-weight:700;">Notifications</span>
+                    <span style="color:var(--col-success); font-weight:800;">On</span>
+                </div>
+                <div class="flex-between" style="padding-top:20px;">
+                    <span style="font-weight:700;">Location Services</span>
+                    <span style="color:var(--col-success); font-weight:800;">On</span>
+                </div>
+            </div>
             
-                // Render Followed Projects
-                const followedList = document.getElementById('profile-followed-projects-list');
-                followedList.innerHTML = '';
-                if (app.state.followedProjects.length === 0) {
-                    followedList.innerHTML = '<p class="text-gray-500">You\'re not following any projects yet.</p>';
-                } else {
-                    app.state.followedProjects.forEach(projectId => {
-                        const project = app.mockData.projects.find(p => p.id === projectId);
-                        if (project) {
-                            followedList.innerHTML += `
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4">
-                                    <img class="w-12 h-12 rounded-lg object-cover" src="${project.imageUrl}" alt="${project.title}">
-                                    <div>
-                                        <h4 class="font-bold text-gray-900">${project.title}</h4>
-                                        <p class="text-gray-600 text-sm">${project.location}</p>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-            },
+            <div class="card">
+                <button class="btn btn-outline" style="color:var(--col-danger); border-color:var(--col-danger);" onclick="app.resetData()">Reset App Data</button>
+            </div>
+            
+            <button class="btn btn-ghost" onclick="Gateway.showGateway()" style="margin-top:24px;">Exit to Main Menu</button>
+        </div>
+    </div>
 
-            // Show Project Detail Page
-            showProjectDetail(projectId) {
-                const project = app.mockData.projects.find(p => p.id === projectId);
-                if (!project) return;
-                
-                const statusColors = {
-                    yellow: 'bg-yellow-100 text-yellow-800',
-                    green: 'bg-green-100 text-green-800',
-                    blue: 'bg-blue-100 text-blue-800'
-                };
+    <div id="modal-create" class="modal">
+        <div class="header">
+            <button class="btn-ghost" onclick="app.closeModal('modal-create')">Cancel</button>
+            <div class="header-title">Host Project</div>
+            <button class="btn-ghost" style="color:var(--brand-primary); font-weight:700;" onclick="app.submitCreate()">Post</button>
+        </div>
+        <div class="modal-content">
+            <div class="input-group">
+                <label class="label">Project Title</label>
+                <input type="text" class="input" id="new-title" placeholder="e.g. Beach Cleanup">
+            </div>
+            <div class="grid-2">
+                <div class="input-group">
+                    <label class="label">Category</label>
+                    <select class="input" id="new-cat">
+                        <option>Garden</option><option>Cleanup</option><option>Social</option><option>Workshop</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="label">Type</label>
+                    <select class="input" id="new-type">
+                        <option>Event (One-off)</option><option>Project (Ongoing)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="label">Location</label>
+                <input type="text" class="input" id="new-loc" placeholder="Neighborhood or Landmark">
+            </div>
+            <div class="input-group">
+                <label class="label">Description</label>
+                <textarea class="input" id="new-desc" rows="4" placeholder="Describe what volunteers will do..."></textarea>
+            </div>
+        </div>
+    </div>
 
-                // Generate HTML for volunteer needs
-                let needsHtml = '';
-                project.needs.forEach(need => {
-                    const isSignedUp = app.state.volunteeredProjects.some(v => v.projectId === project.id && v.role === need.role);
-                    needsHtml += `
-                        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-                            <div class="p-5">
-                                <h4 class="text-xl font-bold text-gray-900">${need.role}</h4>
-                                <p class="text-gray-500 text-sm uppercase font-medium mb-2">${need.commitment}</p>
-                                <p class="text-gray-700 mb-4">${need.description}</p>
-                                <button ${isSignedUp ? 'disabled' : ''} onclick="app.showVolunteerForm(${project.id}, '${need.role.replace(/'/g, "\\'")}')" 
-                                    class="w-full font-bold py-3 px-5 rounded-lg transition duration-300 ${isSignedUp ? 'bg-green-200 text-green-700 cursor-not-allowed' : 'bg-lime-600 text-white hover:bg-lime-700'}">
-                                    ${isSignedUp ? 'You\'re Signed Up!' : 'I\'m Interested!'}
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
+    <div class="nav">
+        <button class="nav-btn active" onclick="app.nav('page-home')" id="nav-home">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span>Home</span>
+        </button>
+        <button class="nav-btn" onclick="app.nav('page-map')" id="nav-map">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            <span>Map</span>
+        </button>
+        <button class="nav-btn" onclick="app.nav('page-explore')" id="nav-explore">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span>Explore</span>
+        </button>
+        <button class="nav-btn" onclick="app.nav('page-profile')" id="nav-profile">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Profile</span>
+        </button>
+    </div>
 
-                // Timeline progress bar
-                const completedSteps = project.timeline.filter(step => step.completed).length;
-                const totalSteps = project.timeline.length;
-                const progressPercent = (completedSteps / totalSteps) * 100;
-                let timelineHtml = `
-                    <div class="mb-2 flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-700">Project Progress</span>
-                        <span class="text-sm font-medium text-gray-700">${Math.round(progressPercent)}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-lime-600 h-2.5 rounded-full" style="width: ${progressPercent}%"></div>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-2">
-                        Next step: ${project.timeline.find(s => !s.completed)?.name || 'Completed!'}
-                    </p>
-                `;
+</div>
 
-                // Follow Button
-                const isFollowing = app.state.followedProjects.includes(project.id);
-                const followButtonHtml = `
-                    <button onclick="app.toggleFollow(${project.id})" class="flex items-center justify-center w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 px-5 rounded-lg hover:bg-gray-50 transition duration-300 mb-4">
-                        <svg class="w-5 h-5 mr-2 ${isFollowing ? 'text-lime-600' : ''}" xmlns="http://www.w3.org/2000/svg" ${isFollowing ? 'viewBox="0 0 24 24" fill="currentColor"' : 'fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"'}>
-                            ${isFollowing ? 
-                                '<path d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />' : 
-                                '<path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.178V21L12 17.25 4.5 21V5.5c0-1.101.806-2.05 1.907-2.178Z" />'}
-                        </svg>
-                        ${isFollowing ? 'Following' : 'Follow Project'}
-                    </button>
-                `;
+<script>
+/* ==========================================================================
+   1. GATEWAY LOGIC
+   ========================================================================== */
+const Gateway = {
+    init() {
+        // Force gateway on load
+        document.getElementById('gateway-screen').classList.remove('hidden');
+        document.getElementById('gallery-screen').classList.add('hidden');
+        document.getElementById('app-root').classList.remove('active');
+    },
 
-                const content = document.getElementById('project-detail-content');
-                content.innerHTML = `
-                    <img class="w-full h-64 object-cover" src="${project.imageUrl}" alt="${project.title}">
-                    
-                    <div class="p-5">
-                        <span class="inline-block ${statusColors[project.statusColor] || 'bg-gray-100 text-gray-800'} text-sm font-semibold px-3 py-1 rounded-full uppercase mb-3">
-                            ${project.status}
-                        </span>
-                        <h1 class="text-4xl font-bold text-gray-900 mb-2">${project.title}</h1>
-                        <p class="text-lg text-gray-500 font-medium mb-6">${project.location}</p>
-                        
-                        ${followButtonHtml}
-                        
-                        <button class="flex items-center justify-center w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 px-5 rounded-lg hover:bg-gray-50 transition duration-300 mb-8">
-                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75c-1.85 0-3.443-1.09-4.142-2.7a2.235 2.235 0 0 1 0-2.1c.699-1.61 2.292-2.7 4.142-2.7s3.443 1.09 4.142 2.7a2.235 2.235 0 0 1 0 2.1c-.699 1.61-2.292-2.7-4.142-2.7Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75v4.5m0 0a2.25 2.25 0 0 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm0 0c-1.85 0-3.443-1.09-4.142-2.7a2.235 2.235 0 0 0 0 2.1c.699 1.61 2.292 2.7 4.142 2.7s3.443-1.09 4.142-2.7a2.235 2.235 0 0 0 0-2.1c-.699-1.61-2.292-2.7-4.142-2.7Z" /></svg>
-                            Share Project
-                        </button>
-                        
-                        <p class="text-gray-700 text-lg mb-8">${project.description}</p>
+    openGallery() {
+        document.getElementById('gateway-screen').classList.add('hidden');
+        document.getElementById('gallery-screen').classList.remove('hidden');
+    },
 
-                        <!-- Project Lead --><div class="bg-white rounded-xl shadow-lg p-5 mb-8 border border-gray-100">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Project Lead</h3>
-                            <div class="flex items-center space-x-4">
-                                <img class="w-16 h-16 rounded-full" src="${project.lead.avatar}" alt="${project.lead.name}">
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-900">${project.lead.name}</h4>
-                                    <p class="text-gray-600">Community Organizer</p>
-                                </div>
-                            </div>
-                        </div>
+    closeGallery() {
+        document.getElementById('gallery-screen').classList.add('hidden');
+        document.getElementById('gateway-screen').classList.remove('hidden');
+    },
 
-                        <!-- Timeline --><div class="bg-white rounded-xl shadow-lg p-5 mb-8 border border-gray-100">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Project Status</h3>
-                            ${timelineHtml}
-                        </div>
+    startApp() {
+        document.getElementById('gateway-screen').classList.add('hidden');
+        document.getElementById('app-root').classList.add('active');
+        app.init(); // Boot the main app
+    },
 
-                        <!-- Gallery --><div class="mb-8">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4 px-5">Gallery</h3>
-                            <div class="flex overflow-x-auto space-x-4 px-5 pb-4">
-                                ${project.gallery.map(url => `
-                                    <img src="${url}" class="w-48 h-36 rounded-lg object-cover shadow-md flex-shrink-0">
-                                `).join('')}
-                            </div>
-                        </div>
+    showGateway() {
+        // Reset back to start
+        document.getElementById('app-root').classList.remove('active');
+        document.getElementById('modal-settings').classList.remove('open');
+        document.getElementById('page-auth').classList.remove('active'); // Hide auth if visible
+        document.getElementById('gateway-screen').classList.remove('hidden');
+    }
+};
 
-                        <!-- Get Involved --><div class="bg-lime-50 rounded-2xl p-5 mt-8 border border-lime-200">
-                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Get Involved</h3>
-                            <div class="space-y-6">${needsHtml}</div>
-                        </div>
-                    </div>
-                `;
+/* ==========================================================================
+   2. STATE MANAGEMENT (Persistence)
+   ========================================================================== */
+const Store = {
+    state: {
+        user: null, // { name, loc, xp, joined: [], volunteered: [] }
+        theme: 'light',
+        onboarded: false,
+    },
+    
+    load() {
+        const saved = localStorage.getItem('adopt_pro_store');
+        if (saved) {
+            try { this.state = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    },
+    
+    save() {
+        localStorage.setItem('adopt_pro_store', JSON.stringify(this.state));
+    },
+    
+    reset() {
+        localStorage.removeItem('adopt_pro_store');
+        location.reload();
+    }
+};
 
-                app.navigate('page-project-detail');
-            },
+/* ==========================================================================
+   3. DATABASE (Content)
+   ========================================================================== */
+const DB = [
+    { id: 1, type: 'Project', cat: 'Garden', title: 'JLT Rooftop Garden', loc: 'Cluster B, JLT', x: 400, y: 600, img: 'https://placehold.co/600x400/10b981/ffffff?text=Rooftop', desc: 'We are creating the largest rooftop garden in JLT. We need help hauling soil and planting seedlings.', roles: ['Planter', 'Logistics', 'Waterer'] },
+    { id: 2, type: 'Event', cat: 'Cleanup', title: 'Safa Park Sweep', loc: 'Safa Park', x: 800, y: 400, img: 'https://placehold.co/600x400/3b82f6/ffffff?text=Cleanup', desc: 'Join 50+ volunteers to clean up the north lawns.', date: 'Sat, 8:00 AM', roles: [] },
+    { id: 3, type: 'Event', cat: 'Workshop', title: 'Composting 101', loc: 'The Greens', x: 600, y: 900, img: 'https://placehold.co/600x400/f59e0b/ffffff?text=Workshop', desc: 'Learn how to turn kitchen scraps into soil.', date: 'Wed, 6:00 PM', roles: [] },
+    { id: 4, type: 'Project', cat: 'Social', title: 'Community Fridge', loc: 'Barsha Heights', x: 1200, y: 700, img: 'https://placehold.co/600x400/ef4444/ffffff?text=Fridge', desc: 'Stocking and cleaning the community fridge.', roles: ['Cleaner', 'Stocker'] },
+    { id: 5, type: 'Project', cat: 'Garden', title: 'Vertical Wall', loc: 'Design District', x: 900, y: 1200, img: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Vertical', desc: 'Installing a green wall in the lobby.', roles: ['Installer', 'Botanist'] },
+    { id: 6, type: 'Event', cat: 'Social', title: 'Morning Yoga', loc: 'Kite Beach', x: 300, y: 300, img: 'https://placehold.co/600x400/ec4899/ffffff?text=Yoga', desc: 'Free community yoga class.', date: 'Fri, 7:00 AM', roles: [] },
+    { id: 7, type: 'Project', cat: 'Animals', title: 'Shelter Help', loc: 'Al Quoz', x: 1500, y: 800, img: 'https://placehold.co/600x400/f97316/ffffff?text=Shelter', desc: 'Walking dogs and cleaning cages.', roles: ['Walker', 'Cleaner'] },
+    { id: 8, type: 'Event', cat: 'Cleanup', title: 'Marina Canal Clean', loc: 'Dubai Marina', x: 500, y: 1400, img: 'https://placehold.co/600x400/0ea5e9/ffffff?text=Canal', desc: 'Kayaks provided for trash collection.', date: 'Sat, 4:00 PM', roles: [] }
+];
 
-            // Show Event Detail Page
-            showEventDetail(eventId) {
-                const event = app.mockData.events.find(e => e.id === eventId);
-                if (!event) return;
+/* ==========================================================================
+   4. MAP ENGINE (Custom JS Implementation)
+   ========================================================================== */
+const MapEngine = {
+    el: document.getElementById('map-canvas'),
+    viewport: document.getElementById('map-viewport'),
+    isDown: false,
+    startX: 0, startY: 0,
+    x: -300, y: -300,
 
-                const project = app.mockData.projects.find(p => p.id === event.projectId);
-                const isRsvped = app.state.rsvpedEvents.includes(eventId);
+    init() {
+        this.viewport.addEventListener('mousedown', e => this.start(e));
+        this.viewport.addEventListener('touchstart', e => this.start(e.touches[0]));
+        
+        window.addEventListener('mouseup', () => this.end());
+        window.addEventListener('touchend', () => this.end());
+        
+        window.addEventListener('mousemove', e => this.move(e));
+        window.addEventListener('touchmove', e => this.move(e.touches[0]));
 
-                const attendeesHtml = `
-                    <div class="flex -space-x-2 overflow-hidden">
-                        <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=FA" alt="Fatima A.">
-                        <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=DL" alt="David L.">
-                        <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="https://placehold.co/100x100/EBFBFF/7F9C0A?text=AJ" alt="Aisha J.">
-                        <div class="inline-flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-white bg-gray-200 text-gray-700 font-medium">+${Math.floor(Math.random() * 10) + 3}</div>
-                    </div>
-                `;
+        this.renderPins();
+        this.updatePosition();
+    },
 
-                const content = document.getElementById('event-detail-content');
-                content.innerHTML = `
-                    <img class="w-full h-64 object-cover" src="${event.imageUrl}" alt="${event.title}">
-                    
-                    <div class="p-5">
-                        <h1 class="text-4xl font-bold text-gray-900 mb-3">${event.title}</h1>
-                        <div class="text-lg text-gray-500 space-y-2 mb-6">
-                            <p class="font-medium text-gray-700">${event.date}</p>
-                            <p class="font-medium text-gray-700">${event.location}</p>
-                        </div>
-                        
-                        <p class="text-gray-700 text-lg mb-8">${event.description}</p>
-                        
-                        <!-- Action Buttons --><div class="flex space-x-4 mb-8">
-                            <button class="flex-1 flex items-center justify-center bg-white border border-gray-300 text-gray-700 font-bold py-3 px-5 rounded-lg hover:bg-gray-50 transition duration-300">
-                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75c-1.85 0-3.443-1.09-4.142-2.7a2.235 2.235 0 0 1 0-2.1c.699-1.61 2.292-2.7 4.142-2.7s3.443 1.09 4.142 2.7a2.235 2.235 0 0 1 0 2.1c-.699 1.61-2.292-2.7-4.142-2.7Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75v4.5m0 0a2.25 2.25 0 0 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm0 0c-1.85 0-3.443-1.09-4.142-2.7a2.235 2.235 0 0 0 0 2.1c.699 1.61 2.292 2.7 4.142 2.7s3.443-1.09 4.142-2.7a2.235 2.235 0 0 0 0-2.1c-.699-1.61-2.292-2.7-4.142-2.7Z" /></svg>
-                                Share
-                            </button>
-                            <button class="flex-1 flex items-center justify-center bg-white border border-gray-300 text-gray-700 font-bold py-3 px-5 rounded-lg hover:bg-gray-50 transition duration-300">
-                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-                                Add to Calendar
-                            </button>
-                        </div>
-                        
-                        <!-- Who's Going --><div class="bg-white rounded-xl shadow-lg p-5 mb-8 border border-gray-100">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Who's Going</h3>
-                            ${attendeesHtml}
-                        </div>
+    start(e) {
+        this.isDown = true;
+        this.startX = e.pageX - this.x;
+        this.startY = e.pageY - this.y;
+        this.viewport.style.cursor = 'grabbing';
+    },
 
-                        ${project ? `
-                        <!-- Related Project --><div class="bg-white rounded-xl shadow-lg p-5 mb-8 border border-gray-100">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Related Project</h3>
-                            <div class="flex items-center space-x-4">
-                                <img class="w-16 h-16 rounded-lg object-cover" src="${project.imageUrl}" alt="${project.title}">
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-900">${project.title}</h4>
-                                    <button onclick="app.showProjectDetail(${project.id})" class="text-lime-600 font-semibold">View Project</button>
-                                </div>
-                            </div>
-                        </div>
-                        ` : ''}
+    end() {
+        this.isDown = false;
+        this.viewport.style.cursor = 'grab';
+    },
 
-                        <!-- RSVP --><div id="rsvp-success" class="hidden p-5 bg-green-100 border border-green-300 text-green-800 rounded-lg mb-6">
-                            <h4 class="font-bold text-lg">You're on the list!</h4>
-                            <p>We'll see you there. Check your Profile page to see all your RSVPs.</p>
-                        </div>
+    move(e) {
+        if (!this.isDown) return;
+        // e.preventDefault(); // Removed to allow some default behavior if needed
+        this.x = e.pageX - this.startX;
+        this.y = e.pageY - this.startY;
+        this.updatePosition();
+    },
 
-                        <button id="rsvp-button" ${isRsvped ? 'disabled' : ''} onclick="app.submitRSVP(${event.id})" 
-                            class="w-full font-bold py-4 px-6 rounded-lg shadow-lg transition duration-300 text-lg ${isRsvped ? 'bg-green-200 text-green-700 cursor-not-allowed' : 'bg-lime-600 text-white hover:bg-lime-700'}">
-                            ${isRsvped ? 'You\'ve RSVP\'d!' : 'RSVP Now'}
-                        </button>
-                    </div>
-                `;
+    updatePosition() {
+        this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+    },
 
-                app.navigate('page-event-detail');
-            },
+    renderPins() {
+        this.el.innerHTML = ''; // clear
+        // Decor
+        this.el.innerHTML += `<div style="position:absolute; top:400px; left:600px; width:200px; height:200px; border: 4px solid rgba(0,0,0,0.05); pointer-events:none;"></div>`;
+        
+        DB.forEach(item => {
+            const pin = document.createElement('div');
+            pin.className = `map-pin ${item.cat === 'Cleanup' ? 'urgent' : ''} ${item.type === 'Event' ? 'event' : ''}`;
+            pin.style.left = item.x + 'px';
+            pin.style.top = item.y + 'px';
+            pin.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                <div class="pin-tooltip">${item.title}</div>
+            `;
+            // Click logic
+            pin.onclick = (e) => {
+                e.stopPropagation();
+                app.openProjectDetail(item.id);
+            };
+            this.el.appendChild(pin);
+        });
+    },
 
-            // Show Volunteer Form
-            showVolunteerForm(projectId, role) {
-                const project = app.mockData.projects.find(p => p.id === projectId);
-                const need = project.needs.find(n => n.role === role);
-                
-                document.getElementById('volunteer-title').textContent = `Volunteer for: ${role}`;
-                document.getElementById('volunteer-desc').textContent = need.description;
-                document.getElementById('volunteer-project-id').value = projectId;
-                document.getElementById('volunteer-role').value = role;
+    reset() {
+        this.x = -500; this.y = -500;
+        this.el.style.transition = 'transform 0.5s ease';
+        this.updatePosition();
+        setTimeout(() => this.el.style.transition = 'none', 500);
+    }
+};
 
-                document.getElementById('volunteer-back-btn').setAttribute('onclick', `app.showProjectDetail(${projectId})`);
-                
-                document.getElementById('volunteer-form').style.display = 'block';
-                document.getElementById('volunteer-success').style.display = 'none';
-                document.getElementById('volunteer-form').reset();
-                
-                app.navigate('page-volunteer');
-            },
+/* ==========================================================================
+   5. MAIN APP CONTROLLER
+   ========================================================================== */
+const app = {
+    currentDetailId: null,
+    currentVolRole: null,
 
-            // Submit Volunteer Form
-            submitVolunteer() {
-                const projectId = parseInt(document.getElementById('volunteer-project-id').value);
-                const role = document.getElementById('volunteer-role').value;
+    init() {
+        Store.load();
+        this.applyTheme();
 
-                if (!app.state.volunteeredProjects.some(v => v.projectId === projectId && v.role === role)) {
-                    app.state.volunteeredProjects.push({ projectId, role });
-                }
+        // Router Logic
+        if (Store.state.user) {
+            this.nav('page-home');
+        } else if (Store.state.onboarded) {
+            this.nav('page-auth');
+        } else {
+            this.setupOnboarding();
+        }
 
-                document.getElementById('volunteer-form').style.display = 'none';
-                document.getElementById('volunteer-success').style.display = 'block';
+        MapEngine.init();
+        this.renderHome();
+        this.renderExplore();
+        this.renderProfile();
+    },
 
-                app.filterAndRenderProjects();
-            },
-
-            // Submit RSVP
-            submitRSVP(eventId) {
-                if (!app.state.rsvpedEvents.includes(eventId)) {
-                    app.state.rsvpedEvents.push(eventId);
-                }
-
-                const rsvpButton = document.getElementById('rsvp-button');
-                const rsvpSuccess = document.getElementById('rsvp-success');
-                if(rsvpButton) {
-                    rsvpButton.style.display = 'none';
-                    const newButton = rsvpButton.cloneNode(true);
-                    newButton.disabled = true;
-                    newButton.textContent = "You've RSVP'd!";
-                    newButton.className = "w-full font-bold py-4 px-6 rounded-lg shadow-lg transition duration-300 text-lg bg-green-200 text-green-700 cursor-not-allowed";
-                    newButton.id = "rsvp-button";
-                    rsvpButton.parentNode.insertBefore(newButton, rsvpButton.nextSibling);
-                }
-                if(rsvpSuccess) rsvpSuccess.style.display = 'block';
-                
-                app.filterAndRenderEvents();
-            },
-
-            // Toggle Follow Project
-            toggleFollow(projectId) {
-                const index = app.state.followedProjects.indexOf(projectId);
-                if (index > -1) {
-                    app.state.followedProjects.splice(index, 1);
-                } else {
-                    app.state.followedProjects.push(projectId);
-                }
-                app.showProjectDetail(projectId);
-            },
-
-            // Card Creator Helpers
-            createProjectCard(project) {
-                const statusColors = {
-                    yellow: 'bg-yellow-100 text-yellow-800',
-                    green: 'bg-green-100 text-green-800',
-                    blue: 'bg-blue-100 text-blue-800'
-                };
-                return `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                        <img class="w-full h-48 object-cover" src="${project.imageUrl}" alt="${project.title}">
-                        <div class="p-5">
-                            <span class="inline-block ${statusColors[project.statusColor] || 'bg-gray-100 text-gray-800'} text-xs font-semibold px-3 py-1 rounded-full uppercase mb-3">
-                                ${project.status}
-                            </span>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">${project.title}</h3>
-                            <p class="text-gray-600 mb-4 h-12 overflow-hidden">
-                                ${project.description.substring(0, 100)}...
-                            </p>
-                            <button onclick="app.showProjectDetail(${project.id})" class="w-full bg-lime-600 text-white font-bold py-3 px-5 rounded-lg hover:bg-lime-700 transition duration-300">
-                                View Project
-                            </button>
-                        </div>
-                    </div>
-                `;
-            },
-
-            createEventCard(event, isFeatured = false) {
-                const isRsvped = app.state.rsvpedEvents.includes(event.id);
-                return `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform transition-all duration-300 ${isFeatured ? '' : 'hover:shadow-xl hover:-translate-y-1'}">
-                        <img class="w-full h-48 object-cover" src="${event.imageUrl}" alt="${event.title}">
-                        <div class="p-5">
-                            <p class="text-lime-600 font-bold text-sm uppercase mb-1">${event.date}</p>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">${event.title}</h3>
-                            <p class="text-gray-600 mb-4">
-                                ${event.location}
-                            </p>
-                            <button onclick="app.showEventDetail(${event.id})" class="w-full ${isRsvped ? 'bg-green-100 text-green-700' : 'bg-lime-600 text-white hover:bg-lime-700'} font-bold py-3 px-5 rounded-lg transition duration-300">
-                                ${isRsvped ? 'You\'ve RSVP\'d' : 'View Event'}
-                            </button>
-                        </div>
-                    </div>
-                `;
+    // --- Onboarding ---
+    setupOnboarding() {
+        let step = 1;
+        document.getElementById('btn-next').onclick = () => {
+            document.getElementById(`slide-${step}`).style.display = 'none';
+            step++;
+            if (step > 2) {
+                Store.state.onboarded = true;
+                Store.save();
+                this.nav('page-auth');
+            } else {
+                const next = document.getElementById(`slide-${step}`);
+                next.style.display = 'block';
+                next.classList.add('fade-in');
             }
-
         };
+        document.getElementById('btn-skip').onclick = () => {
+            Store.state.onboarded = true;
+            Store.save();
+            this.nav('page-auth');
+        };
+        
+        document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
+    },
 
-        app.init();
-    </script>
+    handleLogin(e) {
+        e.preventDefault();
+        const name = document.getElementById('login-name').value;
+        const loc = document.getElementById('login-loc').value;
+        if (name && loc) {
+            Store.state.user = {
+                name, loc, xp: 0, joined: [], volunteered: []
+            };
+            Store.save();
+            this.renderHome();
+            this.renderProfile();
+            this.nav('page-home');
+            this.showToast(`Welcome, ${name}!`);
+        }
+    },
 
+    // --- Navigation ---
+    nav(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        // Nav Bar Icons
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if (pageId === 'page-home') document.getElementById('nav-home').classList.add('active');
+        if (pageId === 'page-map') document.getElementById('nav-map').classList.add('active');
+        if (pageId === 'page-explore') document.getElementById('nav-explore').classList.add('active');
+        if (pageId === 'page-profile') document.getElementById('nav-profile').classList.add('active');
+    },
+
+    // --- Modals ---
+    openModal(id) { document.getElementById(id).classList.add('open'); },
+    closeModal(id) { document.getElementById(id).classList.remove('open'); },
+    openCreateModal() { this.openModal('modal-create'); },
+    openSettings() { this.openModal('modal-settings'); },
+
+    // --- Renderers ---
+    renderHome() {
+        if (!Store.state.user) return;
+        document.getElementById('home-user-name').innerText = Store.state.user.name;
+        document.getElementById('home-pts').innerText = Store.state.user.xp;
+
+        const featured = DB.slice(0, 3);
+        const container = document.getElementById('home-featured-list');
+        container.innerHTML = featured.map(item => this.createCard(item)).join('');
+    },
+
+    renderExplore() {
+        const container = document.getElementById('explore-list');
+        container.innerHTML = DB.map(item => this.createCard(item)).join('');
+    },
+
+    filterList(query) {
+        const lower = query.toLowerCase();
+        const filtered = DB.filter(i => i.title.toLowerCase().includes(lower) || i.loc.toLowerCase().includes(lower));
+        document.getElementById('explore-list').innerHTML = filtered.map(i => this.createCard(i)).join('');
+    },
+
+    setCategory(cat, btn) {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const filtered = cat === 'All' ? DB : DB.filter(i => i.cat === cat);
+        document.getElementById('explore-list').innerHTML = filtered.map(i => this.createCard(i)).join('');
+    },
+
+    renderProfile() {
+        if (!Store.state.user) return;
+        const u = Store.state.user;
+        document.getElementById('profile-name').innerText = u.name;
+        document.getElementById('profile-loc').innerText = u.loc;
+        document.getElementById('stat-events').innerText = u.joined.length;
+        document.getElementById('stat-hours').innerText = u.volunteered.length * 4;
+
+        // Schedule
+        const schedList = document.getElementById('profile-schedule-list');
+        if (u.joined.length > 0) {
+            schedList.innerHTML = u.joined.map(id => {
+                const item = DB.find(i => i.id === id);
+                return `
+                <div class="card no-pad" style="padding:16px; display:flex; gap:16px; align-items:center; border-left: 4px solid var(--col-info);">
+                    <div style="width:40px; height:40px; background:var(--bg-surface-2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px;">📅</div>
+                    <div>
+                        <h4 style="margin:0;">${item.title}</h4>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${item.date}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            schedList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;">No upcoming activities.</div>';
+        }
+
+        // Pending
+        const pendingList = document.getElementById('profile-pending-list');
+        if (u.volunteered.length > 0) {
+            pendingList.innerHTML = u.volunteered.map(v => `
+                <div class="card no-pad" style="padding:16px; display:flex; justify-content:space-between; align-items:center; border-left: 4px solid var(--col-warning);">
+                    <div>
+                        <h4 style="margin:0;">${v.role}</h4>
+                        <div style="font-size:12px; color:var(--text-muted);">Application Submitted</div>
+                    </div>
+                    <div class="badge badge-warning">Pending</div>
+                </div>
+            `).join('');
+        } else {
+            pendingList.innerHTML = '<p style="text-align:center; padding:10px; font-style:italic;">No active applications.</p>';
+        }
+    },
+
+    createCard(item) {
+        return `
+        <div class="card no-pad" onclick="app.openProjectDetail(${item.id})">
+            <img src="${item.img}" class="card-image">
+            <div style="padding:16px;">
+                <div class="flex-between">
+                    <span class="badge badge-primary">${item.cat}</span>
+                    ${item.date ? `<span class="badge badge-neutral">${item.date}</span>` : ''}
+                </div>
+                <h3 style="margin-top:10px; margin-bottom:4px; color:var(--text-main);">${item.title}</h3>
+                <p style="margin-bottom:0;">📍 ${item.loc}</p>
+            </div>
+        </div>`;
+    },
+
+    // --- Detail & Actions ---
+    openProjectDetail(id) {
+        this.currentDetailId = id;
+        const item = DB.find(i => i.id === id);
+        const isJoined = Store.state.user && Store.state.user.joined.includes(id);
+
+        let actionBtn = '';
+        if (item.type === 'Event') {
+            actionBtn = `<button class="btn ${isJoined ? 'btn-secondary' : 'btn-primary'}" onclick="app.toggleEvent(${id})">
+                ${isJoined ? '✓ Ticket Confirmed' : 'Get Ticket'}
+            </button>`;
+        } else {
+            // Project Logic
+            const rolesHtml = item.roles.map(r => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--border-color); border-radius:12px; margin-bottom:8px; background:var(--bg-surface-2);">
+                    <strong style="color:var(--text-main);">${r}</strong>
+                    <button class="btn-primary" style="width:auto; padding:6px 12px; font-size:12px;" onclick="app.startVolunteer('${r}')">Apply</button>
+                </div>
+            `).join('');
+            
+            actionBtn = `
+                <h4 style="margin-bottom:12px; margin-top:20px;">Open Roles</h4>
+                ${rolesHtml}
+            `;
+        }
+
+        document.getElementById('project-detail-content').innerHTML = `
+            <img src="${item.img}" style="width:100%; height:200px; object-fit:cover; border-radius:16px; margin-bottom:20px;">
+            <h1 style="margin-bottom:8px;">${item.title}</h1>
+            <p style="font-weight:600; color:var(--text-main);">📍 ${item.loc}</p>
+            <p>${item.desc}</p>
+            <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;">
+            ${actionBtn}
+        `;
+        this.openModal('modal-project');
+    },
+
+    toggleEvent(id) {
+        if (!Store.state.user.joined.includes(id)) {
+            Store.state.user.joined.push(id);
+            Store.state.user.xp += 50;
+            this.showToast("Ticket Confirmed! (+50 XP)");
+        } else {
+            Store.state.user.joined = Store.state.user.joined.filter(x => x !== id);
+            this.showToast("Ticket Cancelled");
+        }
+        Store.save();
+        this.renderHome();
+        this.renderProfile();
+        this.openProjectDetail(id); // refresh
+    },
+
+    // --- Volunteer Logic ---
+    startVolunteer(role) {
+        this.currentVolRole = role;
+        document.getElementById('vol-roles-list').innerHTML = `<div class="card" style="padding:16px; border-color:var(--brand-primary); background:var(--brand-light);">Selected Role: <strong>${role}</strong></div>`;
+        
+        document.getElementById('vol-step-1').style.display = 'block';
+        document.getElementById('vol-step-2').style.display = 'block'; 
+        this.openModal('modal-volunteer');
+    },
+
+    volBack() {
+        this.closeModal('modal-volunteer');
+    },
+
+    submitVolunteer() {
+        Store.state.user.volunteered.push({
+            role: this.currentVolRole,
+            timestamp: Date.now()
+        });
+        Store.save();
+        this.closeModal('modal-volunteer');
+        this.closeModal('modal-project');
+        this.showToast("Application Sent!");
+        this.renderProfile();
+        this.nav('page-profile');
+    },
+
+    submitCreate() {
+        const title = document.getElementById('new-title').value;
+        const cat = document.getElementById('new-cat').value;
+        const loc = document.getElementById('new-loc').value;
+        
+        if(title && loc) {
+            DB.unshift({
+                id: Date.now(),
+                type: 'Project',
+                cat: cat,
+                title: title,
+                loc: loc,
+                x: 500, y: 500, // default map pos
+                img: 'https://placehold.co/600x400/64748b/ffffff?text=New+Project',
+                desc: document.getElementById('new-desc').value || 'Community initiative.',
+                roles: ['Volunteer'],
+                date: ''
+            });
+            this.showToast("Project Published!");
+            this.closeModal('modal-create');
+            this.renderExplore();
+            this.nav('page-explore');
+        }
+    },
+
+    // --- Settings & Utils ---
+    toggleTheme() {
+        const body = document.body;
+        const isDark = body.getAttribute('data-theme') === 'dark';
+        body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        Store.state.theme = isDark ? 'light' : 'dark';
+        Store.save();
+    },
+
+    applyTheme() {
+        if (Store.state.theme === 'dark') document.body.setAttribute('data-theme', 'dark');
+    },
+
+    resetData() {
+        if(confirm("Are you sure? This wipes all data.")) {
+            Store.reset();
+        }
+    },
+
+    showToast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-msg').innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+};
+
+// Start App via Gateway Init
+Gateway.init();
+
+</script>
 </body>
 </html>
