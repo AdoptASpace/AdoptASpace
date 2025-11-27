@@ -8,11 +8,15 @@
 /* ==========================================================================
    1. CORE ARCHITECTURE & CSS VARIABLES
    ========================================================================== 
+   This section defines the fundamental building blocks of the design system.
+   We use CSS variables (Custom Properties) to allow for real-time theming
+   (Dark/Light mode) and consistent spacing values across the application.
 */
 
 :root {
     /* --- Brand Palette: Emerald & Slate --- 
        Defined using HSL for easy runtime manipulation via JS if needed.
+       This allows us to calculate hover states and glows dynamically.
     */
     --hue-brand: 150; /* Primary Hue (Emerald Green) */
     
@@ -54,7 +58,7 @@
     --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.3);
 
     /* --- Layout Constants --- 
-       ADJUSTED: Increased spacing for better breathing room.
+       These control the physical dimensions of fixed elements.
     */
     --header-height: 70px;
     --nav-height: 90px;
@@ -72,6 +76,7 @@
 
 /* --- Theme: Dark Mode Overrides --- 
    Activated via data-theme="dark" on body tag.
+   Redefines semantic variables for dark contexts.
 */
 [data-theme="dark"] {
     --bg-app: #020617;
@@ -114,8 +119,9 @@ body {
 }
 
 /* ==========================================================================
-   2. GATEWAY & GALLERY STYLES
+   2. GATEWAY & GALLERY STYLES (UPDATED)
    ========================================================================== 
+   This section handles the initial experience (Before/After vs App).
 */
 
 /* Full screen overlays */
@@ -135,7 +141,7 @@ body {
 }
 
 /* --- GATEWAY ENTRY OPTIONS (START MENU) --- 
-   UPDATED: Increased margins and padding significantly.
+   UPDATED: Increased margins and padding significantly to prevent squishing.
 */
 .gateway-container {
     height: 100%;
@@ -146,14 +152,14 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* Increased padding around the whole container */
+    /* Padding around the entire container */
     padding: 40px; 
-    /* Increased gap between buttons */
-    gap: 40px; 
+    /* Gap between the buttons and logo */
+    gap: 48px; 
 }
 
 .gateway-logo {
-    margin-bottom: 60px;
+    margin-bottom: 20px;
     text-align: center;
     animation: float 3s ease-in-out infinite;
 }
@@ -164,11 +170,11 @@ body {
     100% { transform: translateY(0px); }
 }
 
-/* The Main Buttons */
+/* The Main Start Menu Buttons */
 .gateway-option {
     width: 100%;
-    /* Removed fixed aspect ratio to allow text to expand naturally */
-    min-height: 220px; 
+    /* UPDATED: Increased min-height to allow content to stack without cramping */
+    min-height: 280px; 
     background: #1e293b;
     border-radius: 36px;
     display: flex;
@@ -178,15 +184,15 @@ body {
     color: white;
     text-align: center;
     cursor: pointer;
-    border: 3px solid #334155; /* Thicker border */
+    border: 3px solid #334155; /* Thicker border for tactile feel */
     transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
     position: relative;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     
-    /* *** CRITICAL UPDATE *** */
-    /* Massive padding to ensure text never touches the edges */
-    padding: 40px; 
+    /* *** CRITICAL UPDATE: PADDING *** */
+    /* Generous padding ensures text doesn't touch edges even on small screens */
+    padding: 40px 24px; 
 }
 
 .gateway-option:active {
@@ -202,7 +208,7 @@ body {
 .gateway-option h2 {
     color: white;
     margin-bottom: 16px;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
     z-index: 2;
     line-height: 1.2;
@@ -210,8 +216,8 @@ body {
 
 .gateway-option p {
     color: #94a3b8;
-    font-size: 16px;
-    /* Limit width to ensure readability */
+    font-size: 17px;
+    /* Limit width to ensure readability lines aren't too long */
     max-width: 90%;
     margin: 0;
     z-index: 2;
@@ -219,9 +225,10 @@ body {
 }
 
 .gateway-icon {
-    font-size: 56px;
-    margin-bottom: 20px;
+    font-size: 64px;
+    margin-bottom: 24px;
     z-index: 2;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
 }
 
 /* --- BEFORE & AFTER GALLERY (Vertical Stack) --- 
